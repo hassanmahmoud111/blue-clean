@@ -1,0 +1,72 @@
+import type { BookingChannel, OperationKind } from '../types/workflows';
+
+export const workflowUnits = [
+  { id: 'unit-101', name: 'شقة 101', property: 'برج النخيل', channels: ['booking'] },
+  { id: 'unit-102', name: 'شقة 102', property: 'برج النخيل', channels: ['booking','airbnb'] },
+  { id: 'unit-203', name: 'شقة 203', property: 'مساكن الروضة', channels: [] },
+  { id: 'unit-304', name: 'شقة 304', property: 'برج الياسمين', channels: ['airbnb'] },
+  { id: 'unit-405', name: 'شقة 405', property: 'برج الروضة', channels: [] },
+];
+
+export const channelConnections: Array<{
+  id: BookingChannel;
+  name: string;
+  shortName: string;
+  status: 'connected' | 'manual-only' | 'unavailable';
+  syncMethod: string;
+  note: string;
+}> = [
+  { id: 'direct', name: 'حجز مباشر', shortName: 'م', status: 'manual-only', syncMethod: 'إدخال يدوي', note: 'هاتف، واتساب، موقع مباشر أو استقبال' },
+  { id: 'booking', name: 'Booking.com', shortName: 'B.', status: 'connected', syncMethod: 'Connectivity API', note: 'حجوزات جديدة وتعديلات وإلغاءات' },
+  { id: 'airbnb', name: 'Airbnb', shortName: 'A', status: 'connected', syncMethod: 'PMS / API Partner', note: 'يتطلب اعتماد وصلاحيات برنامج متصل' },
+  { id: 'gathern', name: 'Gathern', shortName: 'G', status: 'unavailable', syncMethod: 'غير موثّق', note: 'لا يوجد API عام موثّق؛ الإدخال اليدوي فقط حاليًا' },
+];
+
+export const syncedReservations = [
+  { eventId: 'evt-bkg-90021', externalId: '3918427711', channel: 'booking' as const, guest: 'عبدالله الزهراني', unitId: 'unit-102', unit: 'شقة 102', property: 'برج النخيل', checkIn: '2026-09-14', checkOut: '2026-09-17', guests: 3, total: 1860, status: 'جديد', received: 'منذ دقيقتين' },
+  { eventId: 'evt-bkg-90022', externalId: '3918427734', channel: 'booking' as const, guest: 'هدى سالم', unitId: 'unit-101', unit: 'شقة 101', property: 'برج النخيل', checkIn: '2026-09-18', checkOut: '2026-09-20', guests: 2, total: 980, status: 'تعديل', received: 'منذ 8 دقائق' },
+  { eventId: 'evt-air-44218', externalId: 'HMA3K29FQ8', channel: 'airbnb' as const, guest: 'Sara Ahmed', unitId: 'unit-304', unit: 'شقة 304', property: 'برج الياسمين', checkIn: '2026-09-16', checkOut: '2026-09-19', guests: 4, total: 2240, status: 'جديد', received: 'منذ 4 دقائق' },
+];
+
+export const relatedReservations = [
+  { id: 'RES-2026-1842', guest: 'عبدالله محمد', unitId: 'unit-102', unit: 'شقة 102', channel: 'Booking.com', checkOut: 'اليوم، 11:00 ص' },
+  { id: 'RES-2026-1843', guest: 'سارة العتيبي', unitId: 'unit-304', unit: 'شقة 304', channel: 'Airbnb', checkOut: 'غدًا، 12:00 م' },
+  { id: 'RES-2026-1844', guest: 'تركي الدوسري', unitId: 'unit-203', unit: 'شقة 203', channel: 'Gathern · إدخال يدوي', checkOut: '14 سبتمبر، 11:00 ص' },
+  { id: 'RES-2026-1845', guest: 'نورة الحربي', unitId: 'unit-405', unit: 'شقة 405', channel: 'مباشر', checkOut: '17 سبتمبر، 11:00 ص' },
+];
+
+export const operationFlowConfig: Record<OperationKind, {
+  title: string;
+  singular: string;
+  description: string;
+  accent: string;
+  sources: Array<{ id: 'manual' | 'reservation' | 'guest-request' | 'inspection'; title: string; description: string }>;
+  serviceOptions: string[];
+  checklist: string[];
+}> = {
+  cleaning: {
+    title: 'طلب تنظيف جديد', singular: 'طلب التنظيف', description: 'جدول تنظيفًا يدويًا أو اربطه بمغادرة حجز متزامن.', accent: 'cleaning',
+    sources: [{ id: 'reservation', title: 'بعد مغادرة حجز', description: 'يتم جلب الوحدة ووقت المغادرة من الحجز' }, { id: 'manual', title: 'طلب يدوي', description: 'اختر الوحدة والموعد بنفسك' }],
+    serviceOptions: ['تنظيف بعد المغادرة','تنظيف دوري','تنظيف عميق','تجهيز قبل الوصول'],
+    checklist: ['غرف النوم','دورات المياه','المطبخ','الأرضيات','المفروشات','فحص المستلزمات'],
+  },
+  maintenance: {
+    title: 'إنشاء طلب صيانة', singular: 'طلب الصيانة', description: 'سجّل المشكلة واربطها بوحدة أو بلاغ ضيف أو نتيجة فحص.', accent: 'maintenance',
+    sources: [{ id: 'guest-request', title: 'بلاغ من ضيف', description: 'اربط الطلب بحجز ورسالة الضيف' }, { id: 'inspection', title: 'نتيجة فحص', description: 'ملاحظة سجلها فريق التشغيل' }, { id: 'manual', title: 'بلاغ يدوي', description: 'مشكلة تم اكتشافها مباشرة' }],
+    serviceOptions: ['تكييف','سباكة','كهرباء','أجهزة منزلية','أثاث وأبواب','أخرى'],
+    checklist: ['السماح بالدخول','إيقاف الوحدة مؤقتًا','طلب تقرير فني'],
+  },
+  service: {
+    title: 'طلب خدمة إضافية', singular: 'طلب الخدمة', description: 'أضف خدمة للضيف أو للوحدة مع السعر وموعد التنفيذ.', accent: 'service',
+    sources: [{ id: 'guest-request', title: 'طلب ضيف', description: 'خدمة مرتبطة بحجز حالي أو قادم' }, { id: 'manual', title: 'طلب داخلي', description: 'خدمة تشغيلية للوحدة' }],
+    serviceOptions: ['غسيل كنب','غسيل سجاد','تعقيم شامل','تجهيز ضيافة','سرير أطفال','دخول مبكر','خروج متأخر'],
+    checklist: ['إضافة التكلفة للحجز','إرسال تأكيد للضيف','يتطلب موافقة المدير'],
+  },
+};
+
+export const staffOptions = [
+  { id: 'auto', name: 'تعيين تلقائي' },
+  { id: 'worker-1', name: 'أحمد سالم' },
+  { id: 'worker-2', name: 'فاطمة علي' },
+  { id: 'vendor-1', name: 'مؤسسة الرؤية للصيانة' },
+];

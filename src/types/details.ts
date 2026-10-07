@@ -1,0 +1,69 @@
+export type DetailItem = { label: string; value: string };
+
+export type UnitDetailRecord = {
+  id: string;
+  number: string;
+  name: string;
+  code: string;
+  property: string;
+  city: string;
+  district: string;
+  address: string;
+  status: string;
+  statusTone: string;
+  type: string;
+  imageClass: string;
+  managementMode: 'تشغيل مستقل' | 'مزامنة حجوزات' | 'إدارة مختلطة';
+  capacity: { guests: number; bedrooms: number; beds: number; bathrooms: number };
+  stayDefaults: { checkIn: string; checkOut: string; cleaningMinutes: number; access: string };
+  currentBooking?: { id: string; guest: string; channel: string; checkIn: string; checkOut: string; guests: number; amount: string };
+  nextBooking?: { id: string; guest: string; channel: string; checkIn: string; checkOut: string };
+  metrics: { occupancy: string; revenue: string; completedTasks: string; rating: string };
+  integrations: Array<{ name: string; status: string; listingId: string; lastSync: string; tone: string }>;
+  upcomingOperations: Array<{ id: string; type: string; date: string; assignee: string; status: string; tone: string }>;
+  notes: string[];
+  activity: Array<{ title: string; time: string; tone: string }>;
+};
+
+export type OperationDetailRecord = {
+  id: string;
+  kind: 'cleaning' | 'maintenance' | 'service';
+  title: string;
+  subtitle: string;
+  unit: string;
+  unitCode: string;
+  property: string;
+  imageClass: string;
+  status: string;
+  statusTone: string;
+  priority: string;
+  priorityTone: string;
+  source: string;
+  linkedBooking?: { id: string; guest: string; channel: string; checkout: string };
+  schedule: { date: string; start: string; due: string; duration: string };
+  assignee: { name: string; type: string; phone: string };
+  description: string;
+  checklist: Array<{ title: string; done: boolean }>;
+  costs: Array<{ label: string; value: string }>;
+  attachments: Array<{ name: string; type: string }>;
+  timeline: Array<{ title: string; detail: string; time: string; done: boolean }>;
+};
+
+export type BookingDetailRecord = {
+  id: string;
+  externalId?: string;
+  guest: { name: string; phone: string; email: string; adults: number; children: number };
+  unit: { id: string; name: string; property: string; city: string; imageClass: string };
+  channel: 'Booking.com' | 'Airbnb' | 'Gathern' | 'مباشر';
+  sourceMode: 'مزامنة تلقائية' | 'إدخال يدوي';
+  status: string;
+  statusTone: string;
+  stay: { checkIn: string; checkOut: string; nights: number; arrivalTime: string; departureTime: string };
+  payment: { total: string; paid: string; remaining: string; method: string; status: string; statusTone: string };
+  automations: Array<{ title: string; detail: string; enabled: boolean }>;
+  operations: Array<{ id: string; title: string; status: string; tone: string; route: string }>;
+  messages: Array<{ title: string; time: string; status: string }>;
+  sync: { state: string; lastSync: string; eventId?: string; canWriteBack: boolean };
+  notes: string;
+  activity: Array<{ title: string; detail: string; time: string; done: boolean }>;
+};
