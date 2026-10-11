@@ -18,6 +18,7 @@ export function PublicHeader() {
             </NavLink>
           ))}
         </nav>
+        
         <div className="reference-actions">
           <button className="language-button" type="button" onClick={toggleLang} title={lang === 'ar' ? 'Switch to English' : 'التحويل للعربية'}>
             <Globe2 size={16}/>{lang === 'ar' ? 'العربية' : 'English'}<span>⌄</span>
