@@ -9,7 +9,9 @@ import { Badge } from './ui';
 import { useLanguage } from '../context/LanguageContext';
 import {
   ensureAuthToken,
+  fetchClientMe,
   fetchClientNotifications,
+  fetchGlobalNewSettings,
   getStoredUser,
   isAuthenticated,
   logoutClient,
@@ -168,7 +170,16 @@ export default function AppShell() {
       if (!active || !token) return;
       const stored = getStoredUser();
       if (stored) setUserProfile(stored);
-      fetchClientNotifications(false).then((res) => {
+
+      fetchGlobalNewSettings().catch(() => {});
+
+      fetchClientMe().then((me) => {
+        if (active && me) {
+          setUserProfile(me);
+        }
+      });
+
+      fetchClientNotifications().then((res) => {
         if (active && res) {
           setApiNotifications(res.notifications);
           setUnreadCount(res.unread_count ?? res.notifications.filter((n) => !n.is_read).length);

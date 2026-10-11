@@ -8,181 +8,357 @@ import type {
 } from '../types/clientBooking';
 
 const fallbackStats: BookingStats = {
-  total_bookings: 1,
+  total_bookings: 4,
   check_ins_this_week: 0,
-  check_outs_this_week: 0,
+  check_outs_this_week: 1,
   upcoming_bookings: 0,
-};
-
-const fallbackCalendar: CalendarData = {
-  calendar_info: {
-    view_mode: 'week',
-    base_date: '2026-09-10',
-    from_date: '2026-09-07',
-    to_date: '2026-09-13',
-  },
-  stats: {
-    total_bookings: 1,
-    check_ins_this_week: 0,
-    check_outs_this_week: 0,
-    upcoming_bookings: 0,
-  },
-  units: [
-    {
-      id: 1,
-      name: 'شقة 801',
-      property_name: 'برج الأندلس',
-      code: 'BLD-801',
-      unit_type: 'شقة',
-      image: null,
-      bookings: [
-        {
-          id: 1,
-          booking_code: 'RES-2026-6916',
-          guest_name: 'عبدالله محمد',
-          check_in_date: '2026-09-10',
-          check_out_date: '2026-09-13',
-          status: 'confirmed',
-          booking_source: 'direct',
-          color_tone: 'blue',
-          start_day_index: 3,
-          span_days: 3,
-        },
-      ],
-    },
-    {
-      id: 2,
-      name: 'house 1',
-      property_name: 'building 1',
-      code: 'UNT-WIFS3P',
-      unit_type: 'شقة',
-      image: null,
-      bookings: [],
-    },
-  ],
-  upcoming_bookings: [],
-  platform_distribution: [
-    {
-      source: 'حجز مباشر: هاتف، واتساب أو موقع',
-      count: 1,
-      percentage: 100,
-    },
-  ],
 };
 
 const fallbackBookings: BookingItem[] = [
   {
-    id: 1,
-    booking_code: 'RES-2026-6916',
+    id: 4,
+    booking_code: 'BK-261006-197',
     status: 'confirmed',
+    status_label: 'مؤكد',
     guest: {
-      name: 'عبدالله محمد',
+      name: 'ahmed',
       phone: '+966501234567',
-      email: 'guest@example.com',
-      adults_count: 2,
+      email: 'ahmed@example.com',
+      adults_count: 1,
       children_count: 0,
-      total_guests: 2,
+      total_guests: 1,
     },
     unit: {
-      id: 1,
-      name: 'شقة 801',
-      property_name: 'برج الأندلس',
-      code: 'BLD-801',
+      id: 5,
+      name: 'شقة العليا 102 - صيانة دورية',
+      property_name: 'عمارة العليا 12',
+      code: 'UNT-105',
       unit_type: 'شقة',
-      city: {
-        id: 1,
-        name_ar: 'الرياض',
-        name_en: 'Riyadh',
-      },
-      area: {
-        id: 1,
-        name_ar: 'النرجس',
-        name_en: 'Al Narjis',
-      },
-      image: null,
-      images: [],
+      city: { id: 1, name_ar: 'الرياض', name_en: 'Riyadh' },
+      area: { id: 4, name_ar: 'العليا', name_en: 'Al Olaya' },
+      image: '/unit-thumbs/thumb-3.png',
+      images: ['/unit-thumbs/thumb-3.png'],
     },
     stay: {
-      check_in_date: '2026-09-10',
-      check_in_date_formatted: '10 September 2026',
-      check_in_time: '03:00 PM',
-      check_out_date: '2026-09-13',
-      check_out_date_formatted: '13 September 2026',
-      check_out_time: '11:00 AM',
-      nights_count: 3,
+      check_in_date: '2026-10-06',
+      check_in_date_formatted: '6 أكتوبر 2026',
+      check_in_time: '01:03 PM',
+      check_out_date: '2026-10-14',
+      check_out_date_formatted: '14 أكتوبر 2026',
+      check_out_time: '01:03 PM',
+      nights_count: 8,
     },
     payment: {
-      total_amount: '1860.00',
-      paid_amount: '0.00',
-      remaining_amount: '1860.00',
-      payment_status: 'غير مدفوع',
-      payment_method: 'مباشر',
+      total_amount: 0,
+      paid_amount: 0,
+      remaining_amount: 0,
+      payment_status: 'unpaid',
+      payment_status_label: 'غير مدفوع',
+      payment_method: 'direct',
     },
     source_sync: {
       booking_type: 'direct',
-      booking_source: 'حجز مباشر: هاتف، واتساب أو موقع',
-      sync_status: 'لا توجد مزامنة',
+      booking_source: 'direct',
+      booking_source_label: 'حجز مباشر',
+      sync_status: 'none',
+      sync_label: 'لا توجد مزامنة',
       platform_reference: null,
     },
     automation: {
       block_calendar_dates: true,
       send_welcome_message: true,
       auto_clean_on_checkout: true,
+    },
+    notes: null,
+  },
+  {
+    id: 3,
+    booking_code: 'BK-261002-03',
+    status: 'confirmed',
+    status_label: 'مؤكد',
+    guest: {
+      name: 'سلطان القحطاني',
+      phone: '+966503334455',
+      email: 'sultan@example.com',
+      adults_count: 2,
+      children_count: 0,
+      total_guests: 2,
+    },
+    unit: {
+      id: 3,
+      name: 'استوديو الكورنيش بإطلالة بحرية',
+      property_name: 'أبراج الشاطئ',
+      code: 'UNT-103',
+      unit_type: 'استوديو',
+      city: { id: 2, name_ar: 'جدة', name_en: 'Jeddah' },
+      area: { id: 7, name_ar: 'الشاطئ', name_en: 'Al Shati' },
+      image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+      images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800'],
+    },
+    stay: {
+      check_in_date: '2026-10-03',
+      check_in_date_formatted: '3 أكتوبر 2026',
+      check_in_time: '14:00',
+      check_out_date: '2026-10-06',
+      check_out_date_formatted: '6 أكتوبر 2026',
+      check_out_time: '11:00',
+      nights_count: 3,
+    },
+    payment: {
+      total_amount: 1200,
+      paid_amount: 500,
+      remaining_amount: 700,
+      payment_status: 'partially_paid',
+      payment_status_label: 'مدفوع جزئياً',
+      payment_method: 'bank_transfer',
+    },
+    source_sync: {
+      booking_type: 'direct',
+      booking_source: 'direct',
+      booking_source_label: 'حجز مباشر',
+      sync_status: 'none',
+      sync_label: 'لا توجد مزامنة',
+      platform_reference: null,
+    },
+    automation: {
+      block_calendar_dates: true,
+      send_welcome_message: true,
+      auto_clean_on_checkout: true,
+    },
+    notes: null,
+  },
+  {
+    id: 2,
+    booking_code: 'BK-261002-02',
+    status: 'active',
+    status_label: 'قيد الإقامة',
+    guest: {
+      name: 'خالد المطيري',
+      phone: '+966502223344',
+      email: 'khaled@example.com',
+      adults_count: 4,
+      children_count: 2,
+      total_guests: 6,
+    },
+    unit: {
+      id: 2,
+      name: 'فيلا النرجس VIP مسبح خاص',
+      property_name: 'كمباوند النرجس ريزيدنس',
+      code: 'UNT-102',
+      unit_type: 'فيلا',
+      city: { id: 1, name_ar: 'الرياض', name_en: 'Riyadh' },
+      area: { id: 1, name_ar: 'النرجس', name_en: 'Al Narjis' },
+      image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800',
+      images: ['https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800'],
+    },
+    stay: {
+      check_in_date: '2026-09-30',
+      check_in_date_formatted: '30 سبتمبر 2026',
+      check_in_time: '16:00',
+      check_out_date: '2026-10-02',
+      check_out_date_formatted: '2 أكتوبر 2026',
+      check_out_time: '11:00',
+      nights_count: 2,
+    },
+    payment: {
+      total_amount: 2400,
+      paid_amount: 2400,
+      remaining_amount: 0,
+      payment_status: 'paid',
+      payment_status_label: 'مدفوع',
+      payment_method: 'mastercard',
+    },
+    source_sync: {
+      booking_type: 'platform',
+      booking_source: 'booking',
+      booking_source_label: 'Booking.com',
+      sync_status: 'synced',
+      sync_label: 'تمت المزامنة',
+      platform_reference: 'BK-449102',
+    },
+    automation: {
+      block_calendar_dates: true,
+      send_welcome_message: true,
+      auto_clean_on_checkout: true,
+    },
+    notes: null,
+  },
+  {
+    id: 1,
+    booking_code: 'BK-261002-01',
+    status: 'confirmed',
+    status_label: 'مؤكد',
+    guest: {
+      name: 'فهد السبيعي',
+      phone: '+966501112233',
+      email: 'fahad@example.com',
+      adults_count: 2,
+      children_count: 1,
+      total_guests: 3,
+    },
+    unit: {
+      id: 1,
+      name: 'شقة الرمال الفاخرة - برج 4',
+      property_name: 'أبراج الرمال السكنية',
+      code: 'UNT-101',
+      unit_type: 'شقة',
+      city: { id: 1, name_ar: 'الرياض', name_en: 'Riyadh' },
+      area: { id: 4, name_ar: 'العليا', name_en: 'Al Olaya' },
+      image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+      images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800'],
+    },
+    stay: {
+      check_in_date: '2026-10-02',
+      check_in_date_formatted: '2 أكتوبر 2026',
+      check_in_time: '15:00',
+      check_out_date: '2026-10-05',
+      check_out_date_formatted: '5 أكتوبر 2026',
+      check_out_time: '11:00',
+      nights_count: 3,
+    },
+    payment: {
+      total_amount: 1350,
+      paid_amount: 1350,
+      remaining_amount: 0,
+      payment_status: 'paid',
+      payment_status_label: 'مدفوع',
+      payment_method: 'visa',
+    },
+    source_sync: {
+      booking_type: 'platform',
+      booking_source: 'airbnb',
+      booking_source_label: 'Airbnb',
+      sync_status: 'synced',
+      sync_label: 'تمت المزامنة',
+      platform_reference: 'HM98721X',
+    },
+    automation: {
+      block_calendar_dates: true,
+      send_welcome_message: true,
+      auto_clean_on_checkout: true,
       cleaning_task: {
-        code: 'CLN-2280',
+        code: 'CLN-2031',
         name: 'تنظيف بعد المغادرة',
         status: 'مجدولة',
       },
     },
-    timeline: [
-      {
-        id: 1,
-        title: 'تم إنشاء الحجز',
-        description: 'المصدر: حجز مباشر: هاتف، واتساب أو موقع',
-        timestamp: '30 September 08:27 am',
-        status: 'completed',
-      },
-      {
-        id: 2,
-        title: 'تم تأكيد توفر الوحدة',
-        description: 'لا يوجد تعارض في التقويم',
-        timestamp: '30 September 08:28 am',
-        status: 'completed',
-      },
-      {
-        id: 3,
-        title: 'تم إنشاء مهمة ما بعد المغادرة',
-        description: 'مرتبطة بموعد المغادرة الحالي (CLN-2280)',
-        timestamp: '30 September 08:29 am',
-        status: 'completed',
-      },
-      {
-        id: 4,
-        title: 'وصول الضيف',
-        description: 'بانتظار موعد تسجيل الدخول (03:00 PM)',
-        timestamp: '10 September 2026',
-        status: 'completed',
-      },
-    ],
-    scheduled_messages: [
-      {
-        id: 1,
-        title: 'تم إرسال تأكيد الحجز',
-        status: 'تم التسليم',
-        time_ago: 'منذ يومين',
-      },
-      {
-        id: 2,
-        title: 'تعليمات الدخول',
-        status: 'مجدولة',
-        time_ago: 'مجدولة قبل الوصول',
-      },
-    ],
-    notes: 'ملاحظات الدفع أو تعليمات الوصول',
-    created_at: '2026-09-30T08:27:14+00:00',
-    updated_at: '2026-09-30T08:27:14+00:00',
+    notes: null,
   },
 ];
+
+const fallbackCalendar: CalendarData = {
+  calendar_info: {
+    view_mode: 'week',
+    base_date: '2026-10-05',
+    from_date: '2026-10-03',
+    to_date: '2026-10-08',
+  },
+  stats: fallbackStats,
+  units: [
+    {
+      id: 7,
+      name: 'شقة الرمال الفاخرة - برج 4 (نسخة)',
+      property_name: 'أبراج الرمال السكنية',
+      code: 'UNT-YMFCHL',
+      unit_type: 'شقة',
+      image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+      bookings: [],
+    },
+    {
+      id: 6,
+      name: 'فيلا النرجس VIP مسبح خاص (نسخة)',
+      property_name: 'كمباوند النرجس ريزيدنس',
+      code: 'UNT-Q4HSIB',
+      unit_type: 'فيلا',
+      image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800',
+      bookings: [],
+    },
+    {
+      id: 3,
+      name: 'استوديو الكورنيش بإطلالة بحرية',
+      property_name: 'أبراج الشاطئ',
+      code: 'UNT-103',
+      unit_type: 'استوديو',
+      image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+      bookings: [
+        {
+          id: 3,
+          booking_code: 'BK-261002-03',
+          guest_name: 'سلطان القحطاني',
+          check_in_date: '2026-10-03',
+          check_out_date: '2026-10-06',
+          nights_count: 3,
+          status: 'confirmed',
+          booking_source: 'direct',
+        },
+      ],
+    },
+    {
+      id: 4,
+      name: 'شاليه اليمامة للعائلات',
+      property_name: 'منتجع اليمامة',
+      code: 'UNT-104',
+      unit_type: 'شاليه',
+      image: null,
+      bookings: [],
+    },
+    {
+      id: 5,
+      name: 'شقة العليا 102 - صيانة دورية',
+      property_name: 'عمارة العليا 12',
+      code: 'UNT-105',
+      unit_type: 'شقة',
+      image: null,
+      bookings: [
+        {
+          id: 4,
+          booking_code: 'BK-261006-197',
+          guest_name: 'ahmed',
+          check_in_date: '2026-10-06',
+          check_out_date: '2026-10-14',
+          nights_count: 8,
+          status: 'confirmed',
+          booking_source: 'direct',
+        },
+      ],
+    },
+    {
+      id: 2,
+      name: 'فيلا النرجس VIP مسبح خاص',
+      property_name: 'كمباوند النرجس ريزيدنس',
+      code: 'UNT-102',
+      unit_type: 'فيلا',
+      image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800',
+      bookings: [],
+    },
+    {
+      id: 1,
+      name: 'شقة الرمال الفاخرة - برج 4',
+      property_name: 'أبراج الرمال السكنية',
+      code: 'UNT-101',
+      unit_type: 'شقة',
+      image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+      bookings: [
+        {
+          id: 1,
+          booking_code: 'BK-261002-01',
+          guest_name: 'فهد السبيعي',
+          check_in_date: '2026-10-02',
+          check_out_date: '2026-10-05',
+          nights_count: 3,
+          status: 'confirmed',
+          booking_source: 'airbnb',
+        },
+      ],
+    },
+  ],
+  upcoming_bookings: [],
+  platform_distribution: [
+    { source: 'airbnb', count: 1, percentage: 25 },
+    { source: 'booking', count: 1, percentage: 25 },
+    { source: 'direct', count: 2, percentage: 50 },
+  ],
+};
 
 let localBookingsStore: BookingItem[] = [...fallbackBookings];
 
@@ -223,12 +399,7 @@ export async function fetchBookingStats(): Promise<BookingStats> {
     // fallback
   }
 
-  return {
-    total_bookings: localBookingsStore.length,
-    check_ins_this_week: 0,
-    check_outs_this_week: 0,
-    upcoming_bookings: localBookingsStore.length,
-  };
+  return fallbackStats;
 }
 
 export async function fetchBookingCalendar(params?: {
@@ -292,7 +463,7 @@ export async function fetchBookings(params?: {
     if (params?.page) query.set('page', String(params.page));
     if (params?.per_page) query.set('per_page', String(params.per_page));
     if (params?.search) query.set('search', params.search);
-    if (params?.channel && params.channel !== 'all') query.set('channel', params.channel);
+    if (params?.channel && params.channel !== 'all') query.set('booking_source', params.channel);
     if (params?.status && params.status !== 'all') query.set('status', params.status);
 
     const response = await fetch(`${baseUrl}/client/bookings?${query.toString()}`, {
@@ -306,6 +477,9 @@ export async function fetchBookings(params?: {
     if (response.ok) {
       const json = await response.json();
       if (json.success && Array.isArray(json.data)) {
+        if (!params?.search && (!params?.channel || params.channel === 'all') && (!params?.status || params.status === 'all')) {
+          localBookingsStore = json.data;
+        }
         return {
           data: json.data,
           meta: json.meta || {
@@ -353,28 +527,59 @@ export async function fetchBookings(params?: {
 export async function fetchBookingDetail(id: number | string): Promise<BookingItem> {
   const baseUrl = getBaseUrl();
   const token = getAuthToken();
+  const trimmed = String(id).trim();
 
-  try {
-    const response = await fetch(`${baseUrl}/client/bookings/${id}`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-      },
-    });
+  if (/^\d+$/.test(trimmed)) {
+    try {
+      const response = await fetch(`${baseUrl}/client/bookings/${trimmed}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+      });
 
-    if (response.ok) {
-      const json = await response.json();
-      if (json.success && json.data) {
-        return json.data;
+      if (response.ok) {
+        const json = await response.json();
+        if (json.success && json.data) {
+          return json.data;
+        }
       }
+    } catch {
+      // fallback
     }
-  } catch {
-    // fallback
+  } else {
+    // Resolve booking code (e.g. BK-261002-01) via /client/bookings
+    try {
+      const list = await fetchBookings();
+      const matched = list.data.find(
+        (b) =>
+          String(b.id) === trimmed ||
+          b.booking_code.toLowerCase() === trimmed.toLowerCase()
+      );
+      if (matched) {
+        const detailRes = await fetch(`${baseUrl}/client/bookings/${matched.id}`, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
+        });
+        if (detailRes.ok) {
+          const json = await detailRes.json();
+          if (json.success && json.data) {
+            return json.data;
+          }
+        }
+        return matched;
+      }
+    } catch {
+      // fallback
+    }
   }
 
   const found = localBookingsStore.find(
-    b => String(b.id) === String(id) || b.booking_code.toLowerCase() === String(id).toLowerCase()
+    b => String(b.id) === trimmed || b.booking_code.toLowerCase() === trimmed.toLowerCase()
   );
   return found || localBookingsStore[0];
 }

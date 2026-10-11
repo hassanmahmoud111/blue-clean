@@ -264,15 +264,51 @@ export interface ApiNotificationsResponse {
   notifications: ApiNotificationItem[];
 }
 
-export async function fetchClientNotifications(unreadOnly = false): Promise<ApiNotificationsResponse | null> {
-  const res = await apiFetch<ApiNotificationsResponse>(`/client/notifications?unread_only=${unreadOnly}`);
+export async function fetchClientMe(): Promise<StoredClientUser | null> {
+  const res = await apiFetch<StoredClientUser>('/client/auth/me');
+  if (res.ok && res.data && res.data.id) {
+    setStoredUser(res.data);
+    return res.data;
+  }
+  return null;
+}
+
+export async function fetchGlobalNewSettings(): Promise<any | null> {
+  const res = await apiFetch<any>('/global/landing-page/new-settings');
+  if (res.ok && res.data) {
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem('bluclean_new_settings', JSON.stringify(res.data));
+      } catch {
+        // ignore storage quota errors
+      }
+    }
+    return res.data;
+  }
+  return null;
+}
+
+export async function fetchClientNotifications(unreadOnly?: boolean): Promise<ApiNotificationsResponse | null> {
+  const endpoint = unreadOnly ? '/client/notifications?unread_only=true' : '/client/notifications';
+  const res = await apiFetch<ApiNotificationsResponse>(endpoint);
   if (res.ok && res.data && Array.isArray(res.data.notifications)) {
     return res.data;
   }
   return null;
 }
 
+export async function markClientNotificationRead(id: number | string): Promise<boolean> {
+  const res = await apiFetch(`/client/notifications/${id}/read`, { method: 'POST' });
+  return res.ok;
+}
+
 export async function markAllClientNotificationsRead(): Promise<boolean> {
   const res = await apiFetch('/client/notifications/mark-all-read', { method: 'POST' });
   return res.ok;
 }
+
+export async function deleteClientNotification(id: number | string): Promise<boolean> {
+  const res = await apiFetch(`/client/notifications/${id}`, { method: 'DELETE' });
+  return res.ok;
+}
+

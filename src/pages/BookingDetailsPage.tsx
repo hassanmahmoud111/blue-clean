@@ -68,7 +68,7 @@ export default function BookingDetailsPage() {
     {
       id: 1,
       title: 'تم إنشاء الحجز',
-      description: `المصدر: ${booking.source_sync?.booking_source || 'حجز مباشر'}`,
+      description: `المصدر: ${booking.source_sync?.booking_source_label || booking.source_sync?.booking_source || 'حجز مباشر'}`,
       timestamp: booking.created_at || 'الآن',
       status: 'completed',
     },
@@ -103,6 +103,30 @@ export default function BookingDetailsPage() {
     },
   ];
 
+  const statusLabel =
+    booking.status_label ||
+    (booking.status === 'confirmed'
+      ? 'مؤكد'
+      : booking.status === 'active'
+        ? 'قيد الإقامة'
+        : booking.status);
+
+  const sourceLabel =
+    booking.source_sync?.booking_source_label ||
+    booking.source_sync?.booking_source ||
+    'حجز مباشر';
+
+  const paymentStatusLabel =
+    booking.payment.payment_status_label || booking.payment.payment_status || 'غير مدفوع';
+
+  const isPaid =
+    booking.payment.payment_status === 'paid' ||
+    booking.payment.payment_status === 'مدفوع';
+
+  const unitLinkTarget = booking.unit.code || booking.unit.id;
+  const cleaningCode =
+    booking.cleaning_order?.code || booking.automation.cleaning_task?.code;
+
   return (
     <div className="reference-page details-page booking-details-page">
       <header className="detail-page-header">
@@ -125,9 +149,7 @@ export default function BookingDetailsPage() {
                 {booking.unit.name} · {booking.unit.property_name}
               </p>
             </div>
-            <span className="reference-chip green">
-              {booking.status === 'confirmed' ? 'مؤكد' : booking.status}
-            </span>
+            <span className="reference-chip green">{statusLabel}</span>
           </div>
         </div>
 
@@ -173,13 +195,13 @@ export default function BookingDetailsPage() {
         <Metric
           icon={<CircleDollarSign size={22} />}
           label="إجمالي الحجز"
-          value={`${booking.payment.total_amount} ر.س`}
+          value={`${Number(booking.payment.total_amount).toLocaleString()} ر.س`}
           tone="green"
         />
         <Metric
           icon={<RefreshCw size={22} />}
           label="المصدر"
-          value={booking.source_sync?.booking_source || 'حجز مباشر'}
+          value={sourceLabel}
           tone="orange"
         />
       </section>
@@ -191,8 +213,15 @@ export default function BookingDetailsPage() {
           <section className="reference-panel detail-card">
             <CardTitle icon={<CalendarDays size={19} />} title="تفاصيل الإقامة" subtitle="المواعيد والوحدة المرتبطة بالحجز" />
             <div className="booking-stay-hero">
-              <Link to={`/app/units/${booking.unit.id}`}>
-                <span className="ref-thumbnail u1" />
+              <Link to={`/app/units/${unitLinkTarget}`}>
+                <span
+                  className="ref-thumbnail u1"
+                  style={
+                    booking.unit.image
+                      ? { backgroundImage: `url(${booking.unit.image})`, backgroundSize: 'cover' }
+                      : undefined
+                  }
+                />
                 <div>
                   <small>الوحدة</small>
                   <b>{booking.unit.name}</b>
@@ -249,7 +278,7 @@ export default function BookingDetailsPage() {
                 </span>
                 <div>
                   <b>تنظيف بعد المغادرة</b>
-                  <small>{booking.automation.cleaning_task?.code ? `مهمة ${booking.automation.cleaning_task.code}` : 'مجدولة تلقائيًا'}</small>
+                  <small>{cleaningCode ? `مهمة ${cleaningCode}` : 'مجدولة تلقائيًا'}</small>
                 </div>
                 <em>{booking.automation.auto_clean_on_checkout ? 'مفعّل' : 'متوقف'}</em>
               </div>
@@ -267,7 +296,7 @@ export default function BookingDetailsPage() {
                     <b>{item.title}</b>
                     <small>{item.description}</small>
                   </div>
-                  <time>{item.timestamp}</time>
+                  <time>{item.timestamp_formatted || item.time_ago || item.timestamp}</time>
                 </div>
               ))}
             </div>
@@ -298,14 +327,14 @@ export default function BookingDetailsPage() {
           <section className="reference-panel detail-card">
             <CardTitle icon={<CreditCard size={19} />} title="الدفع والتحصيل" />
             <div className="payment-summary">
-              <strong>{booking.payment.total_amount} ر.س</strong>
-              <span className={`reference-chip ${booking.payment.payment_status === 'مدفوع' ? 'green' : 'orange'}`}>
-                {booking.payment.payment_status}
+              <strong>{Number(booking.payment.total_amount).toLocaleString()} ر.س</strong>
+              <span className={`reference-chip ${isPaid ? 'green' : 'orange'}`}>
+                {paymentStatusLabel}
               </span>
             </div>
             <div className="compact-info-list">
-              <InfoRow icon={<Check size={16} />} label="المدفوع" value={`${booking.payment.paid_amount || '0.00'} ر.س`} />
-              <InfoRow icon={<Clock3 size={16} />} label="المتبقي" value={`${booking.payment.remaining_amount || booking.payment.total_amount} ر.س`} />
+              <InfoRow icon={<Check size={16} />} label="المدفوع" value={`${Number(booking.payment.paid_amount || 0).toLocaleString()} ر.س`} />
+              <InfoRow icon={<Clock3 size={16} />} label="المتبقي" value={`${Number(booking.payment.remaining_amount ?? booking.payment.total_amount).toLocaleString()} ر.س`} />
               <InfoRow icon={<CreditCard size={16} />} label="الطريقة" value={booking.payment.payment_method || 'مباشر'} />
             </div>
           </section>
@@ -314,8 +343,8 @@ export default function BookingDetailsPage() {
           <section className="reference-panel detail-card sync-source-note">
             <RefreshCw size={20} />
             <div>
-              <b>{booking.source_sync?.booking_source || 'حجز مباشر'}</b>
-              <p>{booking.source_sync?.sync_status || 'لا توجد مزامنة'}</p>
+              <b>{sourceLabel}</b>
+              <p>{booking.source_sync?.sync_label || booking.source_sync?.sync_status || 'لا توجد مزامنة'}</p>
               {booking.source_sync?.platform_reference && (
                 <small>مرجع المنصة: {booking.source_sync.platform_reference}</small>
               )}

@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   BedDouble,
   CalendarDays,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -13,190 +12,299 @@ import {
   Search,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Tooltip } from '../components/ui';
 import { useLanguage } from '../context/LanguageContext';
-import { fetchBookingStats } from '../services/clientBookingService';
+import {
+  fetchBookingCalendar,
+  fetchBookings,
+  fetchBookingStats,
+} from '../services/clientBookingService';
+import type {
+  BookingItem,
+  CalendarData,
+  CalendarUnit,
+} from '../types/clientBooking';
 import './bookings-page.css';
 import './bookings-list-view.css';
 
-interface CalendarUnit {
-  id: string;
-  name: string;
-  nameEn: string;
-  property: string;
-  propertyEn: string;
-  thumbSrc?: string;
-  thumbPlaceholder?: 'building' | 'chalet';
-}
+const UNIT_THUMBS: Record<string, { src?: string; placeholder?: 'building' | 'chalet' }> = {
+  'UNT-YMFCHL': { src: '/unit-thumbs/thumb-1.png' },
+  'UNT-Q4HSI8': { src: '/unit-thumbs/thumb-2.png' },
+  'UNT-103': { src: '/unit-thumbs/thumb-5.png' },
+  'UNT-104': { src: '/unit-thumbs/thumb-4.png', placeholder: 'chalet' },
+  'UNT-105': { src: '/unit-thumbs/thumb-3.png', placeholder: 'building' },
+  'UNT-102': { src: '/unit-thumbs/thumb-6.png' },
+  'UNT-101': { src: '/unit-thumbs/thumb-7.png' },
+};
 
-const calendarUnits: CalendarUnit[] = [
-  {
-    id: 'UNT-YMFCHL',
-    name: 'شقة الرمال الفاخرة - برج 4 (نسخة)',
+const UNIT_EN_NAMES: Record<string, { nameEn: string; propertyEn: string }> = {
+  'UNT-YMFCHL': {
     nameEn: 'Al Remal Luxury Apt - Tower 4 (Copy)',
-    property: 'أبراج الرمال السكنية',
     propertyEn: 'Al Remal Residential Towers',
-    thumbSrc: '/unit-thumbs/thumb-1.png',
   },
-  {
-    id: 'UNT-Q4HSI8',
-    name: 'فيلا النرجس VIP مسبح خاص (نسخة)',
+  'UNT-Q4HSI8': {
     nameEn: 'Al Narjis VIP Villa Private Pool (Copy)',
-    property: 'كمباوند النرجس ريزيدنس',
     propertyEn: 'Al Narjis Compound Residence',
-    thumbSrc: '/unit-thumbs/thumb-2.png',
   },
-  {
-    id: 'UNT-103',
-    name: 'استوديو الكورنيش بإطلالة بحرية',
+  'UNT-103': {
     nameEn: 'Corniche Studio Sea View',
-    property: 'أبراج الشاطئ',
     propertyEn: 'Beach Towers',
-    thumbSrc: '/unit-thumbs/thumb-5.png',
   },
-  {
-    id: 'UNT-104',
-    name: 'شاليه اليمامة للعائلات',
+  'UNT-104': {
     nameEn: 'Al Yamama Family Chalet',
-    property: 'منتجع اليمامة',
     propertyEn: 'Al Yamama Resort',
-    thumbSrc: '/unit-thumbs/thumb-4.png',
-    thumbPlaceholder: 'chalet',
   },
-  {
-    id: 'UNT-105',
-    name: 'شقة العليا 102 - صيانة دورية',
+  'UNT-105': {
     nameEn: 'Olaya Apt 102 - Maintenance',
-    property: 'عمارة العليا 12',
     propertyEn: 'Olaya Building 12',
-    thumbSrc: '/unit-thumbs/thumb-3.png',
-    thumbPlaceholder: 'building',
   },
-  {
-    id: 'UNT-102',
-    name: 'فيلا النرجس VIP مسبح خاص',
+  'UNT-102': {
     nameEn: 'Al Narjis VIP Villa Private Pool',
-    property: 'كمباوند النرجس ريزيدنس',
     propertyEn: 'Al Narjis Compound Residence',
-    thumbSrc: '/unit-thumbs/thumb-6.png',
   },
-  {
-    id: 'UNT-101',
-    name: 'شقة الرمال الفاخرة - برج 4',
+  'UNT-101': {
     nameEn: 'Al Remal Luxury Apt - Tower 4',
-    property: 'أبراج الرمال السكنية',
     propertyEn: 'Al Remal Residential Towers',
-    thumbSrc: '/unit-thumbs/thumb-7.png',
   },
+};
+
+const AR_DAYS = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const EN_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const AR_MONTHS = [
+  'يناير',
+  'فبراير',
+  'مارس',
+  'أبريل',
+  'مايو',
+  'يونيو',
+  'يوليو',
+  'أغسطس',
+  'سبتمبر',
+  'أكتوبر',
+  'نوفمبر',
+  'ديسمبر',
+];
+const EN_MONTHS = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
 ];
 
-interface CalendarBooking {
-  id: string;
-  unitId: string;
-  guest: string;
-  guestEn: string;
-  code: string;
-  nights: number;
-  platform: 'A' | 'B' | 'D' | 'G';
-  tone: 'red' | 'green' | 'blue' | 'orange';
-  startCol: number; // 0: Sat, 1: Sun, 2: Mon, 3: Tue, 4: Wed, 5: Thu
-  spanCols: number;
+function toIsoDate(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
-const calendarBookings: CalendarBooking[] = [
-  {
-    id: 'BK-261002-01',
-    unitId: 'UNT-YMFCHL',
-    guest: 'فهد السبيعي',
-    guestEn: 'Fahad Al-Subaie',
-    code: 'BK-261002-01',
-    nights: 3,
-    platform: 'A',
-    tone: 'red',
-    startCol: 1, // Sun 4
-    spanCols: 2, // Sun & Mon
-  },
-  {
-    id: 'BK-261002-03',
-    unitId: 'UNT-103',
-    guest: 'سلطان القحطاني',
-    guestEn: 'Sultan Al-Qahtani',
-    code: 'BK-261002-03',
-    nights: 3,
-    platform: 'B',
-    tone: 'green',
-    startCol: 2, // Mon 5
-    spanCols: 3, // Mon, Tue & Wed
-  },
-  {
-    id: 'BK-261006-197',
-    unitId: 'UNT-105',
-    guest: 'أحمد حسن',
-    guestEn: 'Ahmed Hassan',
-    code: 'BK-261006-197',
-    nights: 5,
-    platform: 'D',
-    tone: 'green',
-    startCol: 3, // Tue 6
-    spanCols: 3, // Tue, Wed & Thu
-  },
-];
+function parseIsoDate(iso: string): Date {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y || 2026, (m || 10) - 1, d || 1);
+}
 
-const daysHeaderAr = [
-  { day: 'السبت', date: 3, isToday: false },
-  { day: 'الأحد', date: 4, isToday: false },
-  { day: 'الإثنين', date: 5, isToday: false },
-  { day: 'الثلاثاء', date: 6, isToday: false },
-  { day: 'الأربعاء', date: 7, isToday: true },
-  { day: 'الخميس', date: 8, isToday: false },
-];
+function formatShortDate(iso: string, lang: string): string {
+  if (!iso) return '—';
+  const d = parseIsoDate(iso);
+  const day = d.getDate();
+  const monthIdx = d.getMonth();
+  return lang === 'en'
+    ? `${EN_MONTHS[monthIdx]?.slice(0, 3) || ''} ${day}`
+    : `${day} ${AR_MONTHS[monthIdx] || ''}`;
+}
 
-const daysHeaderEn = [
-  { day: 'Sat', date: 3, isToday: false },
-  { day: 'Sun', date: 4, isToday: false },
-  { day: 'Mon', date: 5, isToday: false },
-  { day: 'Tue', date: 6, isToday: false },
-  { day: 'Wed', date: 7, isToday: true },
-  { day: 'Thu', date: 8, isToday: false },
-];
+function getPlatformCode(source?: string): 'A' | 'B' | 'D' | 'G' {
+  const s = (source || '').toLowerCase();
+  if (s.includes('airbnb')) return 'A';
+  if (s.includes('booking')) return 'B';
+  if (s.includes('gathern')) return 'G';
+  return 'D';
+}
+
+function getPlatformName(source?: string, label?: string, lang?: string): string {
+  const s = (source || '').toLowerCase();
+  if (s.includes('airbnb')) return 'Airbnb';
+  if (s.includes('booking')) return 'Booking.com';
+  if (s.includes('gathern')) return 'Gathern';
+  if (lang === 'en') return 'Direct Booking';
+  return label || 'حجز مباشر';
+}
+
+function getBarTone(platform: 'A' | 'B' | 'D' | 'G', status?: string): 'red' | 'green' | 'blue' | 'orange' {
+  if (status === 'cancelled') return 'red';
+  if (platform === 'A') return 'red';
+  return 'green';
+}
 
 export default function BookingsPage() {
   const { lang, isRTL, t } = useLanguage();
   const [view, setView] = useState<'calendar' | 'list'>('calendar');
   const [calendarMode, setCalendarMode] = useState<'day' | 'week' | 'month'>('week');
   const [selectedUnit, setSelectedUnit] = useState<string>('all');
-  const [currentMonth, setCurrentMonth] = useState(lang === 'en' ? 'October 2026' : 'أكتوبر 2026');
+  // Default to the week of 2026-10-03 where the active bookings exist in the API
+  const [baseDateIso, setBaseDateIso] = useState<string>('2026-10-03');
   const [searchQuery, setSearchQuery] = useState('');
+
   const [bookingStats, setBookingStats] = useState({
     total_bookings: 4,
-    check_ins_this_week: 2,
-    check_outs_this_week: 2,
+    check_ins_this_week: 0,
+    check_outs_this_week: 1,
     upcoming_bookings: 0,
   });
 
+  const [bookingsList, setBookingsList] = useState<BookingItem[]>([]);
+  const [calendarData, setCalendarData] = useState<CalendarData | null>(null);
+  const [loadingList, setLoadingList] = useState<boolean>(false);
+
+  // Fetch stats & full bookings list on mount
   useEffect(() => {
     let active = true;
+
     fetchBookingStats().then((res) => {
       if (active && res && typeof res.total_bookings === 'number') {
         setBookingStats(res);
       }
     });
+
+    setLoadingList(true);
+    fetchBookings()
+      .then((res) => {
+        if (active && Array.isArray(res.data)) {
+          setBookingsList(res.data);
+        }
+      })
+      .finally(() => {
+        if (active) setLoadingList(false);
+      });
+
     return () => {
       active = false;
     };
   }, []);
 
-  const daysHeader = lang === 'en' ? daysHeaderEn : daysHeaderAr;
+  // Fetch calendar data when mode, date, or unit filter changes
+  useEffect(() => {
+    let active = true;
+    fetchBookingCalendar({
+      view_mode: calendarMode,
+      date: baseDateIso,
+      unit_id: selectedUnit !== 'all' ? selectedUnit : undefined,
+    }).then((res) => {
+      if (active && res) {
+        setCalendarData(res);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [calendarMode, baseDateIso, selectedUnit]);
 
-  const filteredUnits = calendarUnits.filter((u) => {
-    if (selectedUnit !== 'all' && u.id !== selectedUnit) return false;
-    const nameMatch = lang === 'en' ? u.nameEn : u.name;
-    const propMatch = lang === 'en' ? u.propertyEn : u.property;
-    if (searchQuery && !nameMatch.toLowerCase().includes(searchQuery.toLowerCase()) && !propMatch.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
+  // Build visible date columns based on baseDateIso and calendarMode
+  const daysHeader = useMemo(() => {
+    const start = parseIsoDate(baseDateIso);
+    const count = calendarMode === 'day' ? 1 : calendarMode === 'month' ? 14 : 6;
+    const cols: Array<{ isoDate: string; day: string; date: number; isToday: boolean }> = [];
+
+    for (let i = 0; i < count; i++) {
+      const cur = new Date(start);
+      cur.setDate(start.getDate() + i);
+      const iso = toIsoDate(cur);
+      const dayOfWeek = cur.getDay();
+      cols.push({
+        isoDate: iso,
+        day: lang === 'en' ? EN_DAYS[dayOfWeek] : AR_DAYS[dayOfWeek],
+        date: cur.getDate(),
+        isToday: iso === '2026-10-07' || iso === toIsoDate(new Date()),
+      });
     }
-    return true;
-  });
+    return cols;
+  }, [baseDateIso, calendarMode, lang]);
+
+  const currentMonthTitle = useMemo(() => {
+    const d = parseIsoDate(baseDateIso);
+    const m = d.getMonth();
+    const y = d.getFullYear();
+    return lang === 'en' ? `${EN_MONTHS[m]} ${y}` : `${AR_MONTHS[m]} ${y}`;
+  }, [baseDateIso, lang]);
+
+  const shiftCalendarDate = (direction: 'prev' | 'next' | 'today') => {
+    if (direction === 'today') {
+      setBaseDateIso('2026-10-03');
+      return;
+    }
+    const delta =
+      calendarMode === 'day'
+        ? 1
+        : calendarMode === 'month'
+          ? 14
+          : 6;
+    const d = parseIsoDate(baseDateIso);
+    d.setDate(d.getDate() + (direction === 'next' ? delta : -delta));
+    setBaseDateIso(toIsoDate(d));
+  };
+
+  // Merge units from calendar API
+  const allUnits: CalendarUnit[] = useMemo(() => {
+    return calendarData?.units || [];
+  }, [calendarData]);
+
+  const filteredUnits = useMemo(() => {
+    return allUnits.filter((u) => {
+      if (selectedUnit !== 'all' && String(u.id) !== selectedUnit && u.code !== selectedUnit) {
+        return false;
+      }
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const enInfo = UNIT_EN_NAMES[u.code];
+        const nameMatch =
+          u.name.toLowerCase().includes(q) ||
+          (enInfo?.nameEn.toLowerCase().includes(q) ?? false);
+        const propMatch =
+          u.property_name.toLowerCase().includes(q) ||
+          (enInfo?.propertyEn.toLowerCase().includes(q) ?? false);
+        if (!nameMatch && !propMatch) return false;
+      }
+      return true;
+    });
+  }, [allUnits, selectedUnit, searchQuery]);
+
+  // Filter bookings list for List View
+  const filteredBookingsList = useMemo(() => {
+    if (!searchQuery.trim()) return bookingsList;
+    const q = searchQuery.toLowerCase();
+    return bookingsList.filter(
+      (b) =>
+        b.booking_code.toLowerCase().includes(q) ||
+        b.guest.name.toLowerCase().includes(q) ||
+        b.unit.name.toLowerCase().includes(q) ||
+        b.unit.property_name.toLowerCase().includes(q)
+    );
+  }, [bookingsList, searchQuery]);
+
+  // Platform distribution from API
+  const platformDist = useMemo(() => {
+    const apiDist = calendarData?.platform_distribution;
+    if (apiDist && apiDist.length > 0) {
+      return apiDist;
+    }
+    return [
+      { source: 'airbnb', count: 1, percentage: 25 },
+      { source: 'booking', count: 1, percentage: 25 },
+      { source: 'direct', count: 2, percentage: 50 },
+    ];
+  }, [calendarData]);
+
+  const upcomingBookings = useMemo(() => {
+    return calendarData?.upcoming_bookings || [];
+  }, [calendarData]);
 
   return (
     <div className="bookings-page-container">
@@ -222,7 +330,11 @@ export default function BookingsPage() {
         </div>
 
         <div className="bookings-header-actions">
-          <div className="bookings-view-switcher" role="group" aria-label={lang === 'en' ? 'View mode' : 'طريقة العرض'}>
+          <div
+            className="bookings-view-switcher"
+            role="group"
+            aria-label={lang === 'en' ? 'View mode' : 'طريقة العرض'}
+          >
             <button
               type="button"
               className={`bookings-view-btn ${view === 'list' ? 'active' : ''}`}
@@ -248,7 +360,7 @@ export default function BookingsPage() {
         </div>
       </header>
 
-      {/* Stats Cards (4 Items matching the screenshot) */}
+      {/* Stats Cards (4 Items connected to GET /client/bookings/stats) */}
       <section className="bookings-stats-grid">
         <div className="booking-stat-card">
           <div className="booking-stat-info">
@@ -308,82 +420,128 @@ export default function BookingsPage() {
             <div className="bookings-side-card">
               <div className="side-card-header">
                 <h2>{lang === 'en' ? 'Upcoming Bookings' : 'الحجوزات القادمة'}</h2>
-                <Link to="/app/bookings" className="side-card-link">
+                <button
+                  type="button"
+                  onClick={() => setView('list')}
+                  className="side-card-link"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
                   {lang === 'en' ? 'View All' : 'عرض الكل'}
-                </Link>
+                </button>
               </div>
-              <div className="empty-side-state">
-                <span>
-                  {lang === 'en'
-                    ? 'No upcoming bookings recorded'
-                    : 'لا توجد حجوزات قادمة مسجلة'}
-                </span>
-              </div>
+              {upcomingBookings.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {upcomingBookings.map((ub) => (
+                    <Link
+                      key={ub.id}
+                      to={`/app/bookings/${ub.id}`}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        textDecoration: 'none',
+                        color: '#0f172a',
+                        fontSize: '12px',
+                      }}
+                    >
+                      <div>
+                        <strong style={{ display: 'block', fontSize: '12.5px' }}>
+                          {ub.guest.name}
+                        </strong>
+                        <span style={{ color: '#64748b', fontSize: '11px' }}>
+                          {ub.unit.name}
+                        </span>
+                      </div>
+                      <span style={{ color: '#0c7c8a', fontWeight: 700, fontSize: '11px' }}>
+                        {formatShortDate(ub.stay.check_in_date, lang)}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-side-state">
+                  <span>
+                    {lang === 'en'
+                      ? 'No upcoming bookings recorded'
+                      : 'لا توجد حجوزات قادمة مسجلة'}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Bottom Side Card: Channel Distribution */}
             <div className="bookings-side-card">
               <div className="side-card-header">
                 <h2>{lang === 'en' ? 'Bookings by Channel' : 'توزيع الحجوزات حسب المنصة'}</h2>
-                <Link to="/app/bookings" className="side-card-link">
+                <button
+                  type="button"
+                  onClick={() => setView('list')}
+                  className="side-card-link"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                >
                   {lang === 'en' ? 'View All' : 'عرض الكل'}
-                </Link>
+                </button>
               </div>
 
               <div className="platform-dist-list">
-                {/* Airbnb */}
-                <div className="platform-dist-row">
-                  <div className="platform-dist-info">
-                    <span className="platform-dist-badge airbnb">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2C8.5 2 6 5.5 6 10.5c0 4.2 3.2 8.4 6 11.5 2.8-3.1 6-7.3 6-11.5C18 5.5 15.5 2 12 2zm0 11.5a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
-                      </svg>
-                    </span>
-                    <span className="platform-dist-name">Airbnb</span>
-                  </div>
-                  <div className="platform-dist-bar-wrap">
-                    <div className="platform-dist-bar-fill airbnb" style={{ width: '25%' }} />
-                  </div>
-                  <div className="platform-dist-count">
-                    <span className="count-num">1</span>
-                    <span className="count-label">{lang === 'en' ? 'booking' : 'حجز'}</span>
-                  </div>
-                </div>
+                {platformDist.map((item) => {
+                  const src = item.source.toLowerCase();
+                  const isAirbnb = src.includes('airbnb');
+                  const isBooking = src.includes('booking');
+                  const badgeClass = isAirbnb ? 'airbnb' : isBooking ? 'booking' : 'direct';
+                  const label = isAirbnb
+                    ? 'Airbnb'
+                    : isBooking
+                      ? 'Booking.com'
+                      : lang === 'en'
+                        ? 'Direct'
+                        : 'حجز مباشر';
 
-                {/* Booking */}
-                <div className="platform-dist-row">
-                  <div className="platform-dist-info">
-                    <span className="platform-dist-badge booking">.B</span>
-                    <span className="platform-dist-name">Booking.com</span>
-                  </div>
-                  <div className="platform-dist-bar-wrap">
-                    <div className="platform-dist-bar-fill booking" style={{ width: '25%' }} />
-                  </div>
-                  <div className="platform-dist-count">
-                    <span className="count-num">1</span>
-                    <span className="count-label">{lang === 'en' ? 'booking' : 'حجز'}</span>
-                  </div>
-                </div>
-
-                {/* Direct */}
-                <div className="platform-dist-row">
-                  <div className="platform-dist-info">
-                    <span className="platform-dist-badge direct">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="3" y="3" width="18" height="18" rx="2" />
-                        <path d="M9 12h6M12 9v6" />
-                      </svg>
-                    </span>
-                    <span className="platform-dist-name">{lang === 'en' ? 'Direct' : 'حجز مباشر'}</span>
-                  </div>
-                  <div className="platform-dist-bar-wrap">
-                    <div className="platform-dist-bar-fill direct" style={{ width: '50%' }} />
-                  </div>
-                  <div className="platform-dist-count">
-                    <span className="count-num">2</span>
-                    <span className="count-label">{lang === 'en' ? 'bookings' : 'حجز'}</span>
-                  </div>
-                </div>
+                  return (
+                    <div className="platform-dist-row" key={item.source}>
+                      <div className="platform-dist-info">
+                        <span className={`platform-dist-badge ${badgeClass}`}>
+                          {isAirbnb ? (
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M12 2C8.5 2 6 5.5 6 10.5c0 4.2 3.2 8.4 6 11.5 2.8-3.1 6-7.3 6-11.5C18 5.5 15.5 2 12 2zm0 11.5a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
+                            </svg>
+                          ) : isBooking ? (
+                            '.B'
+                          ) : (
+                            <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <rect x="3" y="3" width="18" height="18" rx="2" />
+                              <path d="M9 12h6M12 9v6" />
+                            </svg>
+                          )}
+                        </span>
+                        <span className="platform-dist-name">{label}</span>
+                      </div>
+                      <div className="platform-dist-bar-wrap">
+                        <div
+                          className={`platform-dist-bar-fill ${badgeClass}`}
+                          style={{ width: `${Math.min(100, Math.max(0, item.percentage))}%` }}
+                        />
+                      </div>
+                      <div className="platform-dist-count">
+                        <span className="count-num">{item.count}</span>
+                        <span className="count-label">
+                          {lang === 'en' ? (item.count === 1 ? 'booking' : 'bookings') : 'حجز'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </aside>
@@ -393,25 +551,26 @@ export default function BookingsPage() {
             {/* Calendar Toolbar */}
             <div className="calendar-toolbar">
               <div className="calendar-nav-controls">
-                <button
-                  type="button"
+                <select
                   className="calendar-unit-select"
-                  onClick={() =>
-                    setSelectedUnit((prev) => (prev === 'all' ? 'UNT-YMFCHL' : 'all'))
-                  }
+                  value={selectedUnit}
+                  onChange={(e) => setSelectedUnit(e.target.value)}
+                  aria-label={lang === 'en' ? 'Filter by unit' : 'تصفية حسب الوحدة'}
                 >
-                  <span>
-                    {selectedUnit === 'all'
-                      ? (lang === 'en' ? 'All Units' : 'جميع الوحدات')
-                      : (lang === 'en' ? 'Selected Unit' : 'وحدة محددة')}
-                  </span>
-                  <ChevronDown size={14} />
-                </button>
+                  <option value="all">
+                    {lang === 'en' ? 'All Units' : 'جميع الوحدات'}
+                  </option>
+                  {allUnits.map((u) => (
+                    <option key={u.id} value={String(u.id)}>
+                      {lang === 'en' ? UNIT_EN_NAMES[u.code]?.nameEn || u.name : u.name}
+                    </option>
+                  ))}
+                </select>
 
                 <button
                   type="button"
                   className="calendar-today-btn"
-                  onClick={() => setCurrentMonth(lang === 'en' ? 'October 2026' : 'أكتوبر 2026')}
+                  onClick={() => shiftCalendarDate('today')}
                 >
                   {lang === 'en' ? 'Today' : 'اليوم'}
                 </button>
@@ -419,21 +578,21 @@ export default function BookingsPage() {
                 <button
                   type="button"
                   className="calendar-arrow-btn"
-                  aria-label={lang === 'en' ? 'Next Month' : 'الشهر التالي'}
-                  onClick={() => setCurrentMonth(lang === 'en' ? 'November 2026' : 'نوفمبر 2026')}
+                  aria-label={lang === 'en' ? 'Next Period' : 'الفترة التالية'}
+                  onClick={() => shiftCalendarDate('next')}
                 >
-                  {isRTL ? <ChevronRight size={16} /> : <ChevronRight size={16} />}
+                  <ChevronRight size={16} />
                 </button>
 
-                <span className="calendar-month-title">{currentMonth}</span>
+                <span className="calendar-month-title">{currentMonthTitle}</span>
 
                 <button
                   type="button"
                   className="calendar-arrow-btn"
-                  aria-label={lang === 'en' ? 'Previous Month' : 'الشهر السابق'}
-                  onClick={() => setCurrentMonth(lang === 'en' ? 'September 2026' : 'سبتمبر 2026')}
+                  aria-label={lang === 'en' ? 'Previous Period' : 'الفترة السابقة'}
+                  onClick={() => shiftCalendarDate('prev')}
                 >
-                  {isRTL ? <ChevronLeft size={16} /> : <ChevronLeft size={16} />}
+                  <ChevronLeft size={16} />
                 </button>
               </div>
 
@@ -470,7 +629,7 @@ export default function BookingsPage() {
                     <th className="col-unit-header">{lang === 'en' ? 'Unit' : 'الوحدة'}</th>
                     {daysHeader.map((d) => (
                       <th
-                        key={d.date}
+                        key={d.isoDate}
                         className={d.isToday ? 'today-col' : ''}
                         style={{ width: `${100 / daysHeader.length}%` }}
                       >
@@ -488,9 +647,76 @@ export default function BookingsPage() {
                 </thead>
                 <tbody>
                   {filteredUnits.map((unit) => {
-                    const booking = calendarBookings.find((b) => b.unitId === unit.id);
-                    const unitName = lang === 'en' ? unit.nameEn : unit.name;
-                    const unitProperty = lang === 'en' ? unit.propertyEn : unit.property;
+                    const enMeta = UNIT_EN_NAMES[unit.code];
+                    const thumbMeta = UNIT_THUMBS[unit.code];
+                    const unitName = lang === 'en' ? enMeta?.nameEn || unit.name : unit.name;
+                    const unitProperty =
+                      lang === 'en'
+                        ? enMeta?.propertyEn || unit.property_name
+                        : unit.property_name;
+                    const thumbSrc = unit.image || thumbMeta?.src || '/unit-thumbs/thumb-1.png';
+
+                    // Collect bookings for this unit from both calendar API and bookingsList
+                    const firstIso = daysHeader[0]?.isoDate || '';
+                    const lastIso = daysHeader[daysHeader.length - 1]?.isoDate || '';
+
+                    const unitBookingsFromList = bookingsList.filter(
+                      (b) =>
+                        String(b.unit.id) === String(unit.id) ||
+                        (b.unit.code && b.unit.code === unit.code)
+                    );
+
+                    const combinedBookings = [
+                      ...unitBookingsFromList.map((b) => ({
+                        id: b.id,
+                        code: b.booking_code,
+                        guest: b.guest.name,
+                        checkIn: b.stay.check_in_date,
+                        checkOut: b.stay.check_out_date,
+                        nights: b.stay.nights_count,
+                        source: b.source_sync?.booking_source || b.source_sync?.booking_type || 'direct',
+                        status: b.status,
+                      })),
+                      ...(unit.bookings || [])
+                        .filter(
+                          (ub) =>
+                            !unitBookingsFromList.some(
+                              (b) => String(b.id) === String(ub.id) || b.booking_code === ub.booking_code
+                            )
+                        )
+                        .map((ub) => ({
+                          id: ub.id,
+                          code: ub.booking_code,
+                          guest: ub.guest_name,
+                          checkIn: ub.check_in_date,
+                          checkOut: ub.check_out_date,
+                          nights: ub.nights_count,
+                          source: ub.booking_source || 'direct',
+                          status: ub.status,
+                        })),
+                    ];
+
+                    // Find the booking that overlaps with visible daysHeader
+                    const overlapping = combinedBookings.find(
+                      (b) => b.checkIn <= lastIso && b.checkOut > firstIso
+                    );
+
+                    let startCol = -1;
+                    let spanCols = 0;
+                    if (overlapping) {
+                      const foundStart = daysHeader.findIndex((d) => d.isoDate >= overlapping.checkIn);
+                      startCol = foundStart === -1 ? 0 : foundStart;
+                      let endCol = startCol;
+                      for (let i = startCol; i < daysHeader.length; i++) {
+                        if (daysHeader[i].isoDate < overlapping.checkOut) {
+                          endCol = i;
+                        }
+                      }
+                      spanCols = Math.max(1, endCol - startCol + 1);
+                    }
+
+                    const platformCode = overlapping ? getPlatformCode(overlapping.source) : 'D';
+                    const barTone = overlapping ? getBarTone(platformCode, overlapping.status) : 'green';
 
                     return (
                       <tr key={unit.id}>
@@ -498,17 +724,17 @@ export default function BookingsPage() {
                         <td>
                           <div className="cal-unit-cell">
                             <div className="cal-unit-thumb">
-                              {unit.thumbPlaceholder === 'building' ? (
+                              {!unit.image && thumbMeta?.placeholder === 'building' ? (
                                 <div className="cal-unit-placeholder">
                                   <Building2 size={18} />
                                 </div>
-                              ) : unit.thumbPlaceholder === 'chalet' ? (
+                              ) : !unit.image && thumbMeta?.placeholder === 'chalet' ? (
                                 <div className="cal-unit-placeholder">
                                   <Home size={18} />
                                 </div>
                               ) : (
                                 <img
-                                  src={unit.thumbSrc}
+                                  src={thumbSrc}
                                   alt={unitName}
                                   onError={(e) => {
                                     (e.target as HTMLElement).style.display = 'none';
@@ -517,7 +743,10 @@ export default function BookingsPage() {
                               )}
                             </div>
                             <div className="cal-unit-info">
-                              <Link to={`/app/units/${unit.id}`} className="cal-unit-title">
+                              <Link
+                                to={`/app/units/${unit.code || unit.id}`}
+                                className="cal-unit-title"
+                              >
                                 {unitName}
                               </Link>
                               <span className="cal-unit-prop">{unitProperty}</span>
@@ -528,50 +757,66 @@ export default function BookingsPage() {
                         {/* Days grid cells */}
                         {daysHeader.map((d, colIndex) => {
                           const isToday = d.isToday;
-                          const isBookingStart = booking && booking.startCol === colIndex;
+                          const isBookingStart = overlapping && startCol === colIndex;
 
-                          if (booking && colIndex >= booking.startCol && colIndex < booking.startCol + booking.spanCols) {
+                          if (
+                            overlapping &&
+                            colIndex >= startCol &&
+                            colIndex < startCol + spanCols
+                          ) {
                             if (isBookingStart) {
-                              const guestName = lang === 'en' ? booking.guestEn : booking.guest;
-                              const nightsLabel = lang === 'en' ? `${booking.nights} nights` : `${booking.nights} ليال`;
+                              const nightsLabel =
+                                lang === 'en'
+                                  ? `${overlapping.nights} nights`
+                                  : `${overlapping.nights} ليال`;
                               return (
                                 <td
-                                  key={d.date}
-                                  colSpan={booking.spanCols}
+                                  key={d.isoDate}
+                                  colSpan={spanCols}
                                   className={isToday ? 'today-cell' : ''}
                                   style={{ padding: '6px 8px' }}
                                 >
                                   <Link
-                                    to={`/app/bookings/${booking.code}`}
-                                    className={`booking-bar ${booking.tone}`}
+                                    to={`/app/bookings/${overlapping.id}`}
+                                    className={`booking-bar ${barTone}`}
                                   >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      <span className={`booking-bar-platform ${booking.platform}`}>
-                                        {booking.platform === 'A' ? (
-                                          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                                    <div
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                      }}
+                                    >
+                                      <span className={`booking-bar-platform ${platformCode}`}>
+                                        {platformCode === 'A' ? (
+                                          <svg
+                                            width="11"
+                                            height="11"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                          >
                                             <path d="M12 2C8.5 2 6 5.5 6 10.5c0 4.2 3.2 8.4 6 11.5 2.8-3.1 6-7.3 6-11.5C18 5.5 15.5 2 12 2zm0 11.5a3 3 0 1 1 0-6 3 3 0 0 1 0 6z" />
                                           </svg>
-                                        ) : booking.platform === 'B' ? (
+                                        ) : platformCode === 'B' ? (
                                           '.B'
                                         ) : (
-                                          'D'
+                                          platformCode
                                         )}
                                       </span>
-                                      <span className="booking-bar-guest">{guestName}</span>
+                                      <span className="booking-bar-guest">{overlapping.guest}</span>
                                     </div>
                                     <span className="booking-bar-meta">
-                                      {booking.code} • {nightsLabel}
+                                      {overlapping.code} • {nightsLabel}
                                     </span>
                                   </Link>
                                 </td>
                               );
                             }
-                            // Handled by colSpan
                             return null;
                           }
 
                           return (
-                            <td key={d.date} className={isToday ? 'today-cell' : ''}>
+                            <td key={d.isoDate} className={isToday ? 'today-cell' : ''}>
                               {/* Empty slot */}
                             </td>
                           );
@@ -609,7 +854,7 @@ export default function BookingsPage() {
           </section>
         </div>
       ) : (
-        /* List View */
+        /* List View connected to GET /client/bookings */
         <section className="smart-bookings-view card">
           <div className="smart-bookings-toolbar">
             <div>
@@ -646,62 +891,119 @@ export default function BookingsPage() {
           </div>
 
           <div className="smart-bookings-list">
-            {calendarBookings.map((b) => {
-              const u = calendarUnits.find((unit) => unit.id === b.unitId);
-              const guestName = lang === 'en' ? b.guestEn : b.guest;
-              const unitName = lang === 'en' ? (u?.nameEn || u?.name) : u?.name;
-              const unitProperty = lang === 'en' ? (u?.propertyEn || u?.property) : u?.property;
-              const stayStart = lang === 'en' ? 'Oct 3' : '3 أكتوبر';
-              const stayEnd = lang === 'en' ? 'Oct 6' : '6 أكتوبر';
-              const nightsCount = lang === 'en' ? `${b.nights} nights` : `${b.nights} ليال`;
-              const platformName = b.platform === 'A' ? 'Airbnb' : b.platform === 'B' ? 'Booking.com' : (lang === 'en' ? 'Direct Booking' : 'حجز مباشر');
-              const currencyAmount = lang === 'en' ? '1,200 SAR' : '1,200 ر.س';
-              const confirmedText = lang === 'en' ? 'Confirmed' : 'مؤكد';
+            {loadingList && filteredBookingsList.length === 0 ? (
+              <div style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
+                {lang === 'en' ? 'Loading bookings...' : 'جارٍ تحميل الحجوزات...'}
+              </div>
+            ) : filteredBookingsList.length === 0 ? (
+              <div style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
+                {lang === 'en' ? 'No bookings match your search' : 'لا توجد حجوزات مطابقة للبحث'}
+              </div>
+            ) : (
+              filteredBookingsList.map((b) => {
+                const guestName = b.guest.name || '—';
+                const unitCode = b.unit.code || String(b.unit.id);
+                const enUnit = UNIT_EN_NAMES[unitCode];
+                const unitName = lang === 'en' ? enUnit?.nameEn || b.unit.name : b.unit.name;
+                const unitProperty =
+                  lang === 'en'
+                    ? enUnit?.propertyEn || b.unit.property_name
+                    : b.unit.property_name;
 
-              return (
-                <article key={b.id}>
-                  <div className="smart-guest">
-                    <span>{guestName.charAt(0)}</span>
-                    <div>
-                      <strong>{guestName}</strong>
-                      <small>{b.code}</small>
+                const stayStart = formatShortDate(b.stay.check_in_date, lang);
+                const stayEnd = formatShortDate(b.stay.check_out_date, lang);
+                const nightsCount =
+                  lang === 'en'
+                    ? `${b.stay.nights_count} nights`
+                    : `${b.stay.nights_count} ليال`;
+
+                const platformCode = getPlatformCode(
+                  b.source_sync?.booking_source || b.source_sync?.booking_type
+                );
+                const platformName = getPlatformName(
+                  b.source_sync?.booking_source || b.source_sync?.booking_type,
+                  b.source_sync?.booking_source_label,
+                  lang
+                );
+
+                const amountNum = Number(b.payment.total_amount) || 0;
+                const currencyAmount =
+                  lang === 'en'
+                    ? `${amountNum.toLocaleString()} SAR`
+                    : `${amountNum.toLocaleString()} ر.س`;
+
+                const statusText =
+                  lang === 'en'
+                    ? b.status === 'active'
+                      ? 'Active Stay'
+                      : b.status === 'cancelled'
+                        ? 'Cancelled'
+                        : 'Confirmed'
+                    : b.status_label || (b.status === 'active' ? 'قيد الإقامة' : 'مؤكد');
+
+                const statusChipTone =
+                  b.status === 'cancelled'
+                    ? 'red'
+                    : b.status === 'active'
+                      ? 'blue'
+                      : 'green';
+
+                return (
+                  <article key={b.id}>
+                    <div className="smart-guest">
+                      <span>{guestName.charAt(0).toUpperCase()}</span>
+                      <div>
+                        <strong>{guestName}</strong>
+                        <small>{b.booking_code}</small>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="smart-unit">
-                    <div>
-                      <strong>{unitName}</strong>
-                      <small>{unitProperty}</small>
+                    <div className="smart-unit">
+                      <div>
+                        <Link
+                          to={`/app/units/${unitCode}`}
+                          style={{ color: 'inherit', textDecoration: 'none' }}
+                        >
+                          <strong>{unitName}</strong>
+                        </Link>
+                        <small>{unitProperty}</small>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="smart-stay">
-                    <span><b>{stayStart}</b></span>
-                    <i />
-                    <span><b>{stayEnd}</b></span>
-                    <small>{nightsCount}</small>
-                  </div>
-
-                  <div className="smart-source">
-                    <span className={`booking-bar-platform ${b.platform}`}>{b.platform}</span>
-                    <div>
-                      <strong>{platformName}</strong>
+                    <div className="smart-stay">
+                      <span>
+                        <b>{stayStart}</b>
+                      </span>
+                      <i />
+                      <span>
+                        <b>{stayEnd}</b>
+                      </span>
+                      <small>{nightsCount}</small>
                     </div>
-                  </div>
 
-                  <div className="smart-payment">
-                    <strong>{currencyAmount}</strong>
-                    <span className="reference-chip green">{confirmedText}</span>
-                  </div>
+                    <div className="smart-source">
+                      <span className={`booking-bar-platform ${platformCode}`}>
+                        {platformCode}
+                      </span>
+                      <div>
+                        <strong>{platformName}</strong>
+                      </div>
+                    </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    <Link to={`/app/bookings/${b.code}`} className="smart-details">
-                      {lang === 'en' ? 'View' : 'عرض'}
-                    </Link>
-                  </div>
-                </article>
-              );
-            })}
+                    <div className="smart-payment">
+                      <strong>{currencyAmount}</strong>
+                      <span className={`reference-chip ${statusChipTone}`}>{statusText}</span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <Link to={`/app/bookings/${b.id}`} className="smart-details">
+                        {lang === 'en' ? 'View' : 'عرض'}
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })
+            )}
           </div>
         </section>
       )}

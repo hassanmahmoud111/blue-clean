@@ -17,7 +17,12 @@ export interface CalendarUnitBooking {
   booking_code: string;
   guest_name: string;
   check_in_date: string;
+  check_in_time?: string;
   check_out_date: string;
+  check_out_time?: string;
+  nights_count?: number;
+  total_amount?: string | number;
+  payment_status?: string;
   status: string;
   booking_source: string;
   color_tone?: string;
@@ -30,8 +35,9 @@ export interface CalendarUnit {
   name: string;
   property_name: string;
   code: string;
-  unit_type: string;
+  unit_type?: string;
   image?: string | null;
+  images?: string[];
   bookings: CalendarUnitBooking[];
 }
 
@@ -51,8 +57,8 @@ export interface CalendarData {
 
 export interface BookingGuest {
   name: string;
-  phone?: string;
-  email?: string;
+  phone?: string | null;
+  email?: string | null;
   adults_count: number;
   children_count?: number;
   total_guests?: number;
@@ -97,27 +103,35 @@ export interface BookingPayment {
   paid_amount: string | number;
   remaining_amount: string | number;
   payment_status: string;
+  payment_status_label?: string;
   payment_method: string;
 }
 
 export interface BookingSourceSync {
   booking_type: string;
   booking_source: string;
+  booking_source_label?: string;
   sync_status: string;
+  sync_label?: string;
+  last_synced_at?: string;
+  time_ago?: string;
   platform_reference?: string | null;
 }
 
 export interface CleaningTaskInfo {
   code: string;
   name: string;
+  service_type?: string;
+  service_type_label?: string;
   status: string;
+  status_label?: string;
 }
 
 export interface BookingAutomation {
   block_calendar_dates: boolean;
   send_welcome_message: boolean;
   auto_clean_on_checkout: boolean;
-  cleaning_task?: CleaningTaskInfo;
+  cleaning_task?: CleaningTaskInfo | null;
 }
 
 export interface BookingTimelineItem {
@@ -125,6 +139,8 @@ export interface BookingTimelineItem {
   title: string;
   description: string;
   timestamp: string;
+  timestamp_formatted?: string;
+  time_ago?: string;
   status: 'completed' | 'pending' | string;
 }
 
@@ -138,16 +154,18 @@ export interface BookingScheduledMessage {
 export interface BookingItem {
   id: number;
   booking_code: string;
-  status: 'confirmed' | 'pending' | 'canceled' | 'checked_in' | 'completed' | string;
+  status: 'confirmed' | 'pending' | 'canceled' | 'checked_in' | 'active' | 'completed' | string;
+  status_label?: string;
   guest: BookingGuest;
   unit: BookingUnit;
   stay: BookingStay;
   payment: BookingPayment;
   source_sync: BookingSourceSync;
   automation: BookingAutomation;
+  cleaning_order?: CleaningTaskInfo | null;
   timeline?: BookingTimelineItem[];
   scheduled_messages?: BookingScheduledMessage[];
-  notes?: string;
+  notes?: string | null;
   created_at?: string;
   updated_at?: string;
 }
