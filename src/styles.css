@@ -104,3 +104,54 @@ button { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* ============================================================
+   Bilingual & LTR Support (BluClean)
+   ============================================================ */
+[dir="ltr"] body {
+  direction: ltr;
+}
+
+[dir="ltr"] .dashboard-page-container,
+[dir="ltr"] .settings-page-container,
+[dir="ltr"] .billing-page-container,
+[dir="ltr"] .support-page-container,
+[dir="ltr"] .reports-page-container,
+[dir="ltr"] .operations-page-container,
+[dir="ltr"] .bookings-page-container,
+[dir="ltr"] .units-page-container,
+[dir="ltr"] .smart-bookings-view,
+[dir="ltr"] .dashboard-columns,
+[dir="ltr"] .dashboard-columns > * {
+  direction: ltr !important;
+}
+
+[dir="ltr"] .settings-nav-item,
+[dir="ltr"] .support-channel-card,
+[dir="ltr"] .workflow-toggle-row,
+[dir="ltr"] .related-bookings > button {
+  text-align: left !important;
+}
+
+[dir="ltr"] .settings-breadcrumb svg,
+[dir="ltr"] .support-breadcrumb svg,
+[dir="ltr"] .operations-breadcrumb svg,
+[dir="ltr"] .reports-breadcrumb svg,
+[dir="ltr"] .billing-breadcrumb svg,
+[dir="ltr"] .units-breadcrumb svg {
+  transform: rotate(180deg);
+}
+
+[dir="ltr"] .timeline-list::before {
+  right: auto !important;
+  left: 74px !important;
+}
+
+[dir="ltr"] .metric-bottom-note,
+[dir="ltr"] .card-title-group,
+[dir="ltr"] .table-title-group,
+[dir="ltr"] .billing-plan-info,
+[dir="ltr"] .support-chat-bubble,
+[dir="ltr"] .settings-field-group {
+  text-align: left;
+}

@@ -63,9 +63,14 @@ export interface ClientDashboardTodayTimeline {
 export interface ClientDashboardRecentAlert {
   id: number;
   entity_type: string;
-  ticket_number?: string;
-  subject: string;
-  priority: string;
+  ticket_number?: string | null;
+  subject?: string | null;
+  booking_code?: string | null;
+  booking_source?: string | null;
+  guest_name?: string | null;
+  unit_id?: number | string | null;
+  unit_name?: string | null;
+  priority?: string | null;
   status: string;
   created_at: string;
   updated_at: string;

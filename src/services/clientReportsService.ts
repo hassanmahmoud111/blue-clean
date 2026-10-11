@@ -172,23 +172,11 @@ const fallbackReportsData: ClientReportsData = {
   ],
 };
 
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return (
-    window.localStorage.getItem('token') ||
-    window.localStorage.getItem('bluclean_token') ||
-    window.localStorage.getItem('bluclean_client_token') ||
-    null
-  );
-}
-
-function getBaseUrl(): string {
-  return (import.meta.env.VITE_API_BASE_URL || 'https://blueclean.backend2.kazamiza.com/api/v1').replace(/\/$/, '');
-}
+import { ensureAuthToken, getApiBaseUrl } from './apiClient';
 
 export async function fetchClientReports(params?: ClientReportsFilterParams): Promise<ClientReportsData> {
-  const baseUrl = getBaseUrl();
-  const token = getAuthToken();
+  const baseUrl = getApiBaseUrl();
+  const token = await ensureAuthToken();
 
   try {
     const query = new URLSearchParams();

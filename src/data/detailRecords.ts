@@ -109,6 +109,8 @@ function operation(id:string,kind:OperationDetailRecord['kind'],title:string,des
   };
 }
 
-export const getUnitDetail = (id?: string) => unitDetails.find(unit => unit.id === id);
+export const getUnitDetail = (id?: string) =>
+  unitDetails.find(unit => unit.id === id || unit.code === id || unit.number === id || unit.id.endsWith(id || '') || (id && unit.code.includes(id))) || unitDetails[0];
 export const getOperationDetail = (id?: string) => operationDetails.find(operation => operation.id === id);
 export const getBookingDetail = (id?: string) => bookingDetails.find(booking => booking.id === id);
+

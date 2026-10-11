@@ -11,7 +11,9 @@ export interface CurrentPlan {
   name_ar: string;
   name_en?: string;
   description_ar: string;
+  description_en?: string;
   badge?: string;
+  badge_en?: string;
   units_usage: UnitsUsage;
   features: string[];
 }
@@ -33,7 +35,7 @@ export interface SubscriptionDetails {
   monthly_price: number;
   monthly_price_formatted: string;
   billing_cycle: string;
-  payment_method?: PaymentMethodSummary;
+  payment_method?: PaymentMethodSummary | null;
 }
 
 export interface UpgradePackage {
@@ -43,7 +45,9 @@ export interface UpgradePackage {
   slug?: string;
   price: number;
   price_text_ar?: string;
+  price_text_en?: string;
   description_ar: string;
+  description_en?: string;
 }
 
 export interface UpgradeBanner {

@@ -1,481 +1,586 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  BedDouble,
+  Armchair,
+  BrushCleaning,
   CalendarDays,
   ChevronDown,
   ChevronLeft,
+  ChevronRight,
   Coins,
-  Download,
-  Eye,
   FileChartColumn,
-  Filter,
-  House,
+  Home,
   Percent,
   Sparkles,
+  Wrench,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Tooltip } from '../components/ui';
-import type { ClientReportsData, ClientReportsFilterParams } from '../types/clientReports';
+import { useLanguage } from '../context/LanguageContext';
 import { fetchClientReports } from '../services/clientReportsService';
-import './reference-pages.css';
+import './reports-page.css';
+
+interface UnitPerformanceItem {
+  id: string;
+  name: string;
+  nameEn: string;
+  property: string;
+  propertyEn: string;
+  occupancyRate: number;
+  bookingsCount: number;
+  revenue: string;
+  revenueEn: string;
+  lastBooking: string;
+  lastBookingEn: string;
+  thumbSrc?: string;
+}
+
+const unitsPerformanceData: UnitPerformanceItem[] = [
+  {
+    id: 'UNT-105',
+    name: 'شقة العليا 102 - صيانة دورية',
+    nameEn: 'Olaya Apt 102 - Maintenance',
+    property: 'عمارة العليا 12',
+    propertyEn: 'Olaya Building 12',
+    occupancyRate: 27,
+    bookingsCount: 1,
+    revenue: '0 ر.س',
+    revenueEn: '0 SAR',
+    lastBooking: '6 أكتوبر 2026',
+    lastBookingEn: 'Oct 6, 2026',
+    thumbSrc: '/unit-thumbs/thumb-3.png',
+  },
+  {
+    id: 'UNT-101',
+    name: 'شقة الرمال الفاخرة - برج 4',
+    nameEn: 'Al Remal Luxury Apt - Tower 4',
+    property: 'أبراج الرمال السكنية',
+    propertyEn: 'Al Remal Residential Towers',
+    occupancyRate: 10,
+    bookingsCount: 1,
+    revenue: '1,350 ر.س',
+    revenueEn: '1,350 SAR',
+    lastBooking: '2 أكتوبر 2026',
+    lastBookingEn: 'Oct 2, 2026',
+    thumbSrc: '/unit-thumbs/thumb-7.png',
+  },
+  {
+    id: 'UNT-103',
+    name: 'استوديو الكورنيش بإطلالة بحرية',
+    nameEn: 'Corniche Studio Sea View',
+    property: 'أبراج الشاطئ',
+    propertyEn: 'Beach Towers',
+    occupancyRate: 10,
+    bookingsCount: 1,
+    revenue: '1,200 ر.س',
+    revenueEn: '1,200 SAR',
+    lastBooking: '3 أكتوبر 2026',
+    lastBookingEn: 'Oct 3, 2026',
+    thumbSrc: '/unit-thumbs/thumb-5.png',
+  },
+  {
+    id: 'UNT-102',
+    name: 'فيلا النرجس VIP مسبح خاص',
+    nameEn: 'Al Narjis VIP Villa Private Pool',
+    property: 'كمباوند النرجس ريزيدنس',
+    propertyEn: 'Al Narjis Compound Residence',
+    occupancyRate: 7,
+    bookingsCount: 1,
+    revenue: '2,400 ر.س',
+    revenueEn: '2,400 SAR',
+    lastBooking: '30 سبتمبر 2026',
+    lastBookingEn: 'Sep 30, 2026',
+    thumbSrc: '/unit-thumbs/thumb-6.png',
+  },
+  {
+    id: 'UNT-104',
+    name: 'شاليه اليمامة للعائلات',
+    nameEn: 'Al Yamama Family Chalet',
+    property: 'منتجع اليمامة',
+    propertyEn: 'Al Yamama Resort',
+    occupancyRate: 0,
+    bookingsCount: 0,
+    revenue: '0 ر.س',
+    revenueEn: '0 SAR',
+    lastBooking: 'لا توجد حجوزات حديثة',
+    lastBookingEn: 'No recent bookings',
+    thumbSrc: '/unit-thumbs/thumb-4.png',
+  },
+  {
+    id: 'UNT-Q4HSI8',
+    name: 'فيلا النرجس VIP مسبح خاص (نسخة)',
+    nameEn: 'Al Narjis VIP Villa Private Pool (Copy)',
+    property: 'كمباوند النرجس ريزيدنس',
+    propertyEn: 'Al Narjis Compound Residence',
+    occupancyRate: 0,
+    bookingsCount: 0,
+    revenue: '0 ر.س',
+    revenueEn: '0 SAR',
+    lastBooking: 'لا توجد حجوزات حديثة',
+    lastBookingEn: 'No recent bookings',
+    thumbSrc: '/unit-thumbs/thumb-2.png',
+  },
+  {
+    id: 'UNT-YMFCHL',
+    name: 'شقة الرمال الفاخرة - برج 4 (نسخة)',
+    nameEn: 'Al Remal Luxury Apt - Tower 4 (Copy)',
+    property: 'أبراج الرمال السكنية',
+    propertyEn: 'Al Remal Residential Towers',
+    occupancyRate: 0,
+    bookingsCount: 0,
+    revenue: '0 ر.س',
+    revenueEn: '0 SAR',
+    lastBooking: 'لا توجد حجوزات حديثة',
+    lastBookingEn: 'No recent bookings',
+    thumbSrc: '/unit-thumbs/thumb-1.png',
+  },
+];
+
+const executedServicesData = [
+  {
+    title: 'تنظيف وحدات',
+    titleEn: 'Turnover Cleaning',
+    count: 0,
+    note: '↑ 0% مقارنة بالفترة السابقة',
+    noteEn: '↑ 0% vs previous period',
+    isUp: false,
+    icon: BrushCleaning,
+  },
+  {
+    title: 'صيانة',
+    titleEn: 'Maintenance',
+    count: 0,
+    note: '↑ 0% مقارنة بالفترة السابقة',
+    noteEn: '↑ 0% vs previous period',
+    isUp: false,
+    icon: Wrench,
+  },
+  {
+    title: 'غسيل سجاد',
+    titleEn: 'Carpet Cleaning',
+    count: 0,
+    note: '↑ 0% مقارنة بالفترة السابقة',
+    noteEn: '↑ 0% vs previous period',
+    isUp: false,
+    icon: Sparkles,
+  },
+  {
+    title: 'غسيل كنب',
+    titleEn: 'Sofa Cleaning',
+    count: 0,
+    note: '↑ 0% مقارنة بالفترة السابقة',
+    noteEn: '↑ 0% vs previous period',
+    isUp: false,
+    icon: Armchair,
+  },
+  {
+    title: 'خدمات إضافية',
+    titleEn: 'Extra Services',
+    count: 3,
+    note: '↑ 100% مقارنة بالفترة السابقة',
+    noteEn: '↑ 100% vs previous period',
+    isUp: true,
+    icon: Sparkles,
+  },
+];
+
+const revenueMonths = [
+  { label: 'أكتوبر 2026', labelEn: 'Oct 2026', height: '88%', active: true },
+  { label: 'سبتمبر', labelEn: 'Sep', height: '6px', active: false },
+  { label: 'أغسطس', labelEn: 'Aug', height: '6px', active: false },
+  { label: 'يوليو', labelEn: 'Jul', height: '6px', active: false },
+  { label: 'يونيو', labelEn: 'Jun', height: '6px', active: false },
+  { label: 'مايو', labelEn: 'May', height: '6px', active: false },
+  { label: 'أبريل', labelEn: 'Apr', height: '6px', active: false },
+  { label: 'مارس', labelEn: 'Mar', height: '6px', active: false },
+  { label: 'فبراير', labelEn: 'Feb', height: '6px', active: false },
+];
 
 export default function ReportsPage() {
-  const [data, setData] = useState<ClientReportsData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Filters
-  const [period, setPeriod] = useState<string>('last_30_days');
-  const [bookingSource, setBookingSource] = useState<string>('all');
-  const [propertyName, setPropertyName] = useState<string>('all');
-  const [chartView, setChartView] = useState<'monthly' | 'weekly' | 'daily'>('monthly');
-
-  const loadReports = async () => {
-    setLoading(true);
-    try {
-      const res = await fetchClientReports({
-        period,
-        booking_source: bookingSource,
-        property_name: propertyName,
-        chart_view: chartView,
-      });
-      setData(res);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { lang, isRTL, t } = useLanguage();
+  const [period] = useState(lang === 'en' ? 'Last 30 Days' : 'آخر 30 يوم');
+  const [selectedProperty] = useState(lang === 'en' ? 'All Properties' : 'جميع العقارات');
+  const [selectedUnit] = useState(lang === 'en' ? 'All Units' : 'جميع الوحدات');
+  const [kpis, setKpis] = useState({
+    totalUnits: 7,
+    totalBookings: 4,
+    occupancyRate: 8,
+    totalRevenueAr: '4,950 ر.س',
+    totalRevenueEn: '4,950 SAR',
+  });
 
   useEffect(() => {
-    loadReports();
-  }, [period, bookingSource, propertyName, chartView]);
-
-  const kpis = data?.summary_kpis;
-  const charts = data?.charts;
-  const unitsPerf = data?.units_performance || [];
-  const executedServices = data?.executed_services || [];
-
-  // Computed Conic Gradient for Booking Sources
-  const bookingSourcesDonut = useMemo(() => {
-    const slices = charts?.booking_sources.slices || [];
-    const colors = ['#ff7181', '#4093ef', '#8d43dc', '#aebbc6', '#26b779'];
-    let currentPct = 0;
-    const gradientParts: string[] = [];
-    const items: Array<[string, string, string]> = [];
-
-    slices.forEach((slice, idx) => {
-      const color = colors[idx % colors.length];
-      const start = currentPct;
-      const end = currentPct + slice.percentage;
-      gradientParts.push(`${color} ${start}% ${end}%`);
-      items.push([slice.source, `${slice.count} (${slice.percentage}%)`, color]);
-      currentPct = end;
+    let active = true;
+    fetchClientReports({ period: 'last_30_days' }).then((data) => {
+      if (active && data?.summary_kpis) {
+        const revVal = data.summary_kpis.total_revenue?.value;
+        const revFormatted =
+          typeof revVal === 'number'
+            ? revVal.toLocaleString('en-US')
+            : '4,950';
+        setKpis({
+          totalUnits: data.summary_kpis.total_units?.value ?? 7,
+          totalBookings: data.summary_kpis.total_bookings?.value ?? 4,
+          occupancyRate: data.summary_kpis.occupancy_rate?.value ?? 8,
+          totalRevenueAr: data.summary_kpis.total_revenue?.formatted || `${revFormatted} ر.س`,
+          totalRevenueEn: `${revFormatted} SAR`,
+        });
+      }
     });
-
-    return {
-      gradient: gradientParts.length > 0 ? `conic-gradient(${gradientParts.join(', ')})` : undefined,
-      items,
-      total: charts?.booking_sources.total_bookings ?? 0,
+    return () => {
+      active = false;
     };
-  }, [charts?.booking_sources]);
-
-  // Computed Conic Gradient for Units Status
-  const unitsStatusDonut = useMemo(() => {
-    const slices = charts?.units_status.slices || [];
-    const colorMap: Record<string, string> = {
-      occupied: '#076689',
-      ready: '#44bf78',
-      pending_cleaning: '#ffb348',
-      maintenance: '#ff5963',
-    };
-    let currentPct = 0;
-    const gradientParts: string[] = [];
-    const items: Array<[string, string, string]> = [];
-
-    slices.forEach(slice => {
-      const color = colorMap[slice.key] || '#718799';
-      const start = currentPct;
-      const end = currentPct + slice.percentage;
-      gradientParts.push(`${color} ${start}% ${end}%`);
-      items.push([slice.label, `${slice.count} (${slice.percentage}%)`, color]);
-      currentPct = end;
-    });
-
-    return {
-      gradient: gradientParts.length > 0 ? `conic-gradient(${gradientParts.join(', ')})` : undefined,
-      items,
-      total: charts?.units_status.total_units ?? 0,
-    };
-  }, [charts?.units_status]);
-
-  // Revenue bars height calculation
-  const revenueBars = useMemo(() => {
-    const bars = charts?.revenue_trend.bars || [];
-    const maxRev = Math.max(...bars.map(b => b.revenue), 50000);
-    return bars.map(bar => ({
-      ...bar,
-      heightPx: Math.max(30, Math.round((bar.revenue / maxRev) * 160)),
-    }));
-  }, [charts?.revenue_trend.bars]);
-
-  // Export report to CSV
-  const handleExport = () => {
-    if (!data) return;
-    let csv = 'الوحدة,العقار,نسبة الإشغال,عدد الحجوزات,الإيرادات,آخر حجز\n';
-    unitsPerf.forEach(u => {
-      csv += `"${u.name}","${u.property_name}","${u.occupancy_formatted}",${u.bookings_count},"${u.revenue_formatted}","${u.last_booking_date}"\n`;
-    });
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `blueclean-reports-${period}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
+  }, []);
 
   return (
-    <div className="reference-page reports-page">
-      <header className="reference-page-header">
-        <div className="reference-page-heading">
-          <div className="reference-breadcrumb">
-            <Link to="/app">الرئيسية</Link>
-            <ChevronLeft size={13} />
-            <span>التقارير</span>
+    <div className="reports-page-container">
+      {/* Header */}
+      <header className="reports-header">
+        <div className="reports-header-info">
+          <div className="reports-breadcrumb">
+            <span>{t('nav.dashboard')}</span>
+            {isRTL ? <ChevronLeft size={13} /> : <ChevronRight size={13} />}
+            <span>{t('nav.reports')}</span>
           </div>
-          <h1>
-            <FileChartColumn size={29} />
-            التقارير والتحليلات
-          </h1>
-          <p>تحليلات شاملة لأداء وحداتك، مصادر الحجوزات، الإيرادات والخدمات المنفذة</p>
-        </div>
-
-        {/* Filter Controls Bar */}
-        <div className="report-filters">
-          <select
-            className="reference-control"
-            value={period}
-            onChange={e => setPeriod(e.target.value)}
-          >
-            <option value="last_30_days">آخر 30 يوم</option>
-            <option value="last_7_days">آخر 7 أيام</option>
-            <option value="this_month">هذا الشهر</option>
-            <option value="last_month">الشهر الماضي</option>
-            <option value="this_year">هذا العام</option>
-          </select>
-
-          <select
-            className="reference-control"
-            value={bookingSource}
-            onChange={e => setBookingSource(e.target.value)}
-          >
-            <option value="all">جميع المنصات</option>
-            <option value="Airbnb">Airbnb</option>
-            <option value="Booking.com">Booking.com</option>
-            <option value="Gathern">Gathern</option>
-            <option value="حجز مباشر">حجز مباشر</option>
-          </select>
-
-          <select
-            className="reference-control"
-            value={propertyName}
-            onChange={e => setPropertyName(e.target.value)}
-          >
-            <option value="all">جميع العقارات</option>
-            <option value="برج النخيل">برج النخيل</option>
-            <option value="مساكن الروضة">مساكن الروضة</option>
-            <option value="برج الياسمين">برج الياسمين</option>
-          </select>
-
-          <button
-            type="button"
-            className="reference-primary"
-            onClick={loadReports}
-          >
-            <Filter size={17} />
-            تحديث التقرير
-          </button>
+          <div className="reports-title-row">
+            <h1>{lang === 'en' ? 'Reports & Analytics' : 'التقارير والتحليلات'}</h1>
+            <span className="reports-title-badge" aria-hidden="true">
+              <FileChartColumn size={20} />
+            </span>
+          </div>
+          <p>
+            {lang === 'en'
+              ? 'Comprehensive analytics on unit performance, revenue, and completed services.'
+              : 'تحليلات شاملة لأداء الوحدات، الإيرادات والخدمات المنفذة'}
+          </p>
         </div>
       </header>
 
-      {/* KPI Cards Row */}
-      <section className="reference-stats four">
-        <ReportStat
-          label="إجمالي الوحدات"
-          value={String(kpis?.total_units.value ?? 12)}
-          note={kpis?.total_units.label || 'بدون تغيير'}
-          color="blue"
-          icon={House}
-        />
-        <ReportStat
-          label="عدد الحجوزات"
-          value={String(kpis?.total_bookings.value ?? 56)}
-          note={kpis?.total_bookings.comparison_label || '↑ 14% مقارنة بالفترة السابقة'}
-          color="sky"
-          icon={CalendarDays}
-        />
-        <ReportStat
-          label="نسبة الإشغال"
-          value={kpis?.occupancy_rate.formatted || `${kpis?.occupancy_rate.value ?? 78}%`}
-          note={kpis?.occupancy_rate.comparison_label || '↑ 6% مقارنة بالفترة السابقة'}
-          color="orange"
-          icon={Percent}
-        />
-        <ReportStat
-          label="إجمالي الإيرادات"
-          value={kpis?.total_revenue.formatted || `${kpis?.total_revenue.value ?? 48750} ر.س`}
-          note={kpis?.total_revenue.comparison_label || '↑ 12% مقارنة بالفترة السابقة'}
-          color="green"
-          icon={Coins}
-        />
+      {/* Filter Card Bar */}
+      <section className="reports-filter-bar">
+        <button type="button" className="reports-filter-select">
+          <span>{lang === 'en' ? 'Last 30 Days' : period}</span>
+          <ChevronDown size={14} />
+        </button>
+
+        <button type="button" className="reports-filter-select">
+          <span>{lang === 'en' ? 'All Properties' : selectedProperty}</span>
+          <ChevronDown size={14} />
+        </button>
+
+        <button type="button" className="reports-filter-select">
+          <span>{lang === 'en' ? 'All Units' : selectedUnit}</span>
+          <ChevronDown size={14} />
+        </button>
       </section>
 
-      {/* Middle Section: Revenue Trend & Donut Charts */}
-      <section className="reports-charts">
-        {/* Revenue Trend Chart */}
-        <article className="reference-panel report-card">
-          <div className="reference-panel-title">
-            <h2>اتجاه الإيرادات</h2>
-            <select
-              className="reference-control"
-              style={{ height: 34, padding: '0 10px', fontSize: 11 }}
-              value={chartView}
-              onChange={e => setChartView(e.target.value as any)}
-            >
-              <option value="monthly">شهريًا</option>
-              <option value="weekly">أسبوعيًا</option>
-              <option value="daily">يوميًا</option>
-            </select>
+      {/* 4 KPI Stats Grid */}
+      <section className="reports-stats-grid">
+        {/* 1. Total Units */}
+        <div className="report-stat-card">
+          <div className="report-stat-info">
+            <span className="report-stat-label">
+              {lang === 'en' ? 'Total Units' : 'إجمالي الوحدات'}
+            </span>
+            <strong className="report-stat-value">{kpis.totalUnits}</strong>
+            <span className="report-stat-sub">
+              {lang === 'en' ? 'Registered Units' : 'الوحدات المسجلة'}
+            </span>
           </div>
-          <div className="revenue-chart">
-            {revenueBars.map((bar, index) => (
-              <i
-                key={bar.key || index}
-                className={`revenue-bar ${bar.is_current_month || index === revenueBars.length - 1 ? 'active' : ''}`}
-                style={{ height: bar.heightPx }}
-                title={`${bar.full_label || bar.label}: ${bar.revenue.toLocaleString()} ر.س (${bar.bookings_count} حجز)`}
-              >
-                <span>{bar.label}</span>
-              </i>
+          <div className="report-stat-icon-wrap blue">
+            <Home size={22} />
+          </div>
+        </div>
+
+        {/* 2. Total Bookings */}
+        <div className="report-stat-card">
+          <div className="report-stat-info">
+            <span className="report-stat-label">
+              {lang === 'en' ? 'Total Bookings' : 'عدد الحجوزات'}
+            </span>
+            <strong className="report-stat-value">{kpis.totalBookings}</strong>
+            <span className="report-stat-sub up">
+              {lang === 'en' ? '↑ 100% vs previous period' : '↑ 100% مقارنة بالفترة السابقة'}
+            </span>
+          </div>
+          <div className="report-stat-icon-wrap blue">
+            <CalendarDays size={22} />
+          </div>
+        </div>
+
+        {/* 3. Occupancy Rate */}
+        <div className="report-stat-card">
+          <div className="report-stat-info">
+            <span className="report-stat-label">
+              {lang === 'en' ? 'Occupancy Rate' : 'نسبة الإشغال'}
+            </span>
+            <strong className="report-stat-value">{kpis.occupancyRate}%</strong>
+            <span className="report-stat-sub up">
+              {lang === 'en' ? '↑ 100% vs previous period' : '↑ 100% مقارنة بالفترة السابقة'}
+            </span>
+          </div>
+          <div className="report-stat-icon-wrap amber">
+            <Percent size={22} />
+          </div>
+        </div>
+
+        {/* 4. Total Revenue */}
+        <div className="report-stat-card">
+          <div className="report-stat-info">
+            <span className="report-stat-label">
+              {lang === 'en' ? 'Total Revenue' : 'إجمالي الإيرادات'}
+            </span>
+            <strong className="report-stat-value">
+              {lang === 'en' ? kpis.totalRevenueEn : kpis.totalRevenueAr}
+            </strong>
+            <span className="report-stat-sub up">
+              {lang === 'en' ? '↑ 100% vs previous period' : '↑ 100% مقارنة بالفترة السابقة'}
+            </span>
+          </div>
+          <div className="report-stat-icon-wrap green">
+            <Coins size={22} />
+          </div>
+        </div>
+      </section>
+
+      {/* Middle Section: 3 Charts */}
+      <section className="reports-charts-grid">
+        {/* Chart 1: Unit Status */}
+        <div className="report-chart-card">
+          <div className="chart-card-header">
+            <h2>{lang === 'en' ? 'Unit Status' : 'حالة الوحدات'}</h2>
+          </div>
+          <div className="donut-chart-wrap">
+            <div
+              className="donut-circle"
+              style={{
+                background: '#22c55e',
+              }}
+            >
+              <div className="donut-hole">
+                <strong>7</strong>
+                <small>{lang === 'en' ? 'Total Units' : 'إجمالي الوحدات'}</small>
+              </div>
+            </div>
+
+            <div className="donut-legend-list">
+              <div className="donut-legend-row">
+                <div className="donut-legend-info">
+                  <span className="donut-legend-dot" style={{ background: '#0284c7' }} />
+                  <span>{lang === 'en' ? 'Occupied' : 'مشغولة'}</span>
+                </div>
+                <span className="donut-legend-count">0 (0%)</span>
+              </div>
+
+              <div className="donut-legend-row">
+                <div className="donut-legend-info">
+                  <span className="donut-legend-dot" style={{ background: '#22c55e' }} />
+                  <span>{lang === 'en' ? 'Ready' : 'جاهزة'}</span>
+                </div>
+                <span className="donut-legend-count">7 (100%)</span>
+              </div>
+
+              <div className="donut-legend-row">
+                <div className="donut-legend-info">
+                  <span className="donut-legend-dot" style={{ background: '#f97316' }} />
+                  <span>{lang === 'en' ? 'Needs Cleaning' : 'بانتظار التنظيف'}</span>
+                </div>
+                <span className="donut-legend-count">0 (0%)</span>
+              </div>
+
+              <div className="donut-legend-row">
+                <div className="donut-legend-info">
+                  <span className="donut-legend-dot" style={{ background: '#ef4444' }} />
+                  <span>{lang === 'en' ? 'Maintenance' : 'قيد الصيانة'}</span>
+                </div>
+                <span className="donut-legend-count">0 (0%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart 2: Booking Channels */}
+        <div className="report-chart-card">
+          <div className="chart-card-header">
+            <h2>{lang === 'en' ? 'Booking Channels' : 'مصادر الحجوزات'}</h2>
+          </div>
+          <div className="donut-chart-wrap">
+            <div
+              className="donut-circle"
+              style={{
+                background:
+                  'conic-gradient(#0284c7 0% 50%, #ef4444 50% 75%, #8b5cf6 75% 100%)',
+              }}
+            >
+              <div className="donut-hole">
+                <strong>4</strong>
+                <small>{lang === 'en' ? 'Total Bookings' : 'إجمالي الحجوزات'}</small>
+              </div>
+            </div>
+
+            <div className="donut-legend-list">
+              <div className="donut-legend-row">
+                <div className="donut-legend-info">
+                  <span className="donut-legend-dot" style={{ background: '#0284c7' }} />
+                  <span>{lang === 'en' ? 'Direct' : 'direct'}</span>
+                </div>
+                <span className="donut-legend-count">2 (50%)</span>
+              </div>
+
+              <div className="donut-legend-row">
+                <div className="donut-legend-info">
+                  <span className="donut-legend-dot" style={{ background: '#ef4444' }} />
+                  <span>{lang === 'en' ? 'Airbnb' : 'airbnb'}</span>
+                </div>
+                <span className="donut-legend-count">1 (25%)</span>
+              </div>
+
+              <div className="donut-legend-row">
+                <div className="donut-legend-info">
+                  <span className="donut-legend-dot" style={{ background: '#8b5cf6' }} />
+                  <span>{lang === 'en' ? 'Booking.com' : 'booking'}</span>
+                </div>
+                <span className="donut-legend-count">1 (25%)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart 3: Revenue Trend */}
+        <div className="report-chart-card">
+          <div className="chart-card-header">
+            <h2>{lang === 'en' ? 'Revenue Trends' : 'اتجاه الإيرادات'}</h2>
+            <button type="button" className="chart-view-pill">
+              {lang === 'en' ? 'Monthly' : 'شهرياً'}
+            </button>
+          </div>
+          <div className="revenue-bar-chart">
+            {revenueMonths.map((m, i) => (
+              <div key={i} className={`rev-bar-col ${m.active ? 'active' : ''}`}>
+                <div className="rev-bar-pillar" style={{ height: m.height }} />
+                <span className="rev-bar-label">{lang === 'en' ? m.labelEn : m.label}</span>
+              </div>
             ))}
           </div>
-        </article>
-
-        {/* Booking Sources Donut */}
-        <DonutCard
-          title="مصادر الحجوزات"
-          center={String(bookingSourcesDonut.total)}
-          subtitle="إجمالي الحجوزات"
-          gradient={
-            bookingSourcesDonut.gradient ||
-            'conic-gradient(#ff7181 0 43%,#4093ef 43% 75%,#8d43dc 75% 93%,#aebbc6 93%)'
-          }
-          items={bookingSourcesDonut.items}
-        />
-
-        {/* Units Status Donut */}
-        <DonutCard
-          title="حالة الوحدات"
-          center={String(unitsStatusDonut.total)}
-          subtitle="إجمالي الوحدات"
-          gradient={
-            unitsStatusDonut.gradient ||
-            'conic-gradient(#076689 0 67%,#44bf78 67% 84%,#ffb348 84% 92%,#ff5963 92%)'
-          }
-          items={unitsStatusDonut.items}
-        />
-      </section>
-
-      {/* Bottom Section: Units Performance, Executed Services & Export */}
-      <section className="report-bottom">
-        {/* Units Performance Table */}
-        <article className="reference-panel performance-card">
-          <div className="reference-panel-title">
-            <h2>أداء الوحدات</h2>
-            <Link to="/app/units" className="reference-link">
-              عرض كل الوحدات
-            </Link>
-          </div>
-          <table className="performance-table">
-            <thead>
-              <tr>
-                <th>الوحدة</th>
-                <th>نسبة الإشغال</th>
-                <th>عدد الحجوزات</th>
-                <th>الإيرادات</th>
-                <th>آخر حجز</th>
-                <th style={{ textAlign: 'center' }}>إجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {unitsPerf.map((unit, index) => (
-                <tr key={unit.id || index}>
-                  <td>
-                    <div className="performance-unit">
-                      <span className={`ref-thumbnail u${(index % 8) + 1}`} />
-                      <span>
-                        <strong>{unit.name}</strong>
-                        <small>{unit.property_name}</small>
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="occupancy">
-                      <b>{unit.occupancy_formatted}</b>
-                      <i style={{ '--value': `${unit.occupancy_rate}%` } as CSSProperties} />
-                    </span>
-                  </td>
-                  <td>
-                    <b>{unit.bookings_count}</b>
-                  </td>
-                  <td>
-                    <strong>{unit.revenue_formatted}</strong>
-                  </td>
-                  <td>{unit.last_booking_date}</td>
-                  <td>
-                    <div className="table-actions-cell">
-                      <Tooltip text="عرض تفاصيل الوحدة">
-                        <Link
-                          to={`/app/units/${unit.code || unit.id}`}
-                          className="table-icon-btn primary"
-                          aria-label={`عرض تفاصيل ${unit.name}`}
-                        >
-                          <Eye size={15} />
-                        </Link>
-                      </Tooltip>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </article>
-
-        {/* Executed Services Card */}
-        <article className="reference-panel services-card">
-          <div className="reference-panel-title">
-            <h2>الخدمات المنفذة</h2>
-            <Link to="/app/operations/cleaning" className="reference-link">
-              عرض العمليات
-            </Link>
-          </div>
-          {executedServices.map((svc, idx) => (
-            <ServiceResult
-              key={idx}
-              label={svc.service_name}
-              value={String(svc.count)}
-              mark={svc.comparison_label || (svc.change_percentage ? `↑ ${svc.change_percentage}%` : '')}
-            />
-          ))}
-        </article>
-
-        {/* Expenses & Export Box */}
-        <div className="costs-stack">
-          <DonutCard
-            title="التكاليف والمصروفات"
-            center="12,450"
-            subtitle="ر.س إجمالي المصروفات"
-            gradient="conic-gradient(#066486 0 42%,#4897ef 42% 73%,#ffbd54 73% 90%,#b7c1c9 90%)"
-            items={[
-              ['مواد تنظيف', '5,200 (42%)', '#066486'],
-              ['رواتب العمال', '3,800 (31%)', '#4897ef'],
-              ['الصيانة', '2,100 (17%)', '#ffbd54'],
-              ['أخرى', '1,350 (11%)', '#b7c1c9'],
-            ]}
-          />
-          <article className="reference-panel export-report">
-            <div>
-              <h3>تصدير التقارير</h3>
-              <p>احصل على تقارير مفصلة بصيغة Excel أو PDF</p>
-              <button
-                type="button"
-                className="reference-primary"
-                onClick={handleExport}
-              >
-                <Download size={14} />
-                تصدير التقرير
-              </button>
-            </div>
-            <FileChartColumn size={46} color="#0877a4" />
-          </article>
         </div>
       </section>
-    </div>
-  );
-}
 
-function ReportStat({
-  label,
-  value,
-  note,
-  color,
-  icon: Icon,
-}: {
-  label: string;
-  value: string;
-  note: string;
-  color: string;
-  icon: typeof House;
-}) {
-  return (
-    <article className="reference-stat">
-      <span className={`reference-stat-icon ${color}`}>
-        <Icon size={29} />
-      </span>
-      <div className="reference-stat-copy">
-        <span>{label}</span>
-        <strong>{value}</strong>
-        <small className={note.includes('↑') ? 'up' : ''}>{note}</small>
-      </div>
-    </article>
-  );
-}
-
-function DonutCard({
-  title,
-  center,
-  subtitle,
-  gradient,
-  items,
-}: {
-  title: string;
-  center: string;
-  subtitle: string;
-  gradient: string;
-  items: Array<[string, string, string]>;
-}) {
-  return (
-    <article className="reference-panel report-card">
-      <h2>{title}</h2>
-      <div className="donut-content">
-        <div className="donut" style={{ background: gradient }}>
-          <span className="donut-center">
-            <strong>{center}</strong>
-            {subtitle}
-          </span>
-        </div>
-        <div className="donut-legend">
-          {items.map(([label, value, color]) => (
-            <span key={label}>
-              <i style={{ background: color }} />
-              <b>{label}</b>
-              <strong>{value}</strong>
+      {/* Bottom Section: Executed Services (Right) + Units Performance (Left) */}
+      <section className="reports-bottom-grid">
+        {/* Services Column */}
+        <aside className="services-card-panel">
+          <div className="chart-card-header" style={{ marginBottom: 4 }}>
+            <h2>{lang === 'en' ? 'Executed Services' : 'الخدمات المنفذة'}</h2>
+            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>
+              {lang === 'en' ? '3 operations' : '3 عملية'}
             </span>
-          ))}
-        </div>
-      </div>
-    </article>
-  );
-}
+          </div>
 
-function ServiceResult({ label, value, mark }: { label: string; value: string; mark: string }) {
-  return (
-    <div className="service-result">
-      <i>✧</i>
-      <b>{label}</b>
-      <strong>
-        {value} {mark && <small>{mark}</small>}
-      </strong>
+          {executedServicesData.map((svc, i) => {
+            const Icon = svc.icon;
+            return (
+              <div key={i} className="service-exec-item">
+                <span className="service-exec-val">{svc.count}</span>
+                <div className="service-exec-info">
+                  <strong className="service-exec-title">
+                    {lang === 'en' ? svc.titleEn : svc.title}
+                  </strong>
+                  <span className={`service-exec-note ${svc.isUp ? 'up' : ''}`}>
+                    {lang === 'en' ? svc.noteEn : svc.note}
+                  </span>
+                </div>
+                <div className="service-exec-icon">
+                  <Icon size={18} />
+                </div>
+              </div>
+            );
+          })}
+        </aside>
+
+        {/* Units Performance Column */}
+        <section className="units-perf-panel">
+          <div className="chart-card-header">
+            <h2>{lang === 'en' ? 'Units Performance' : 'أداء الوحدات'}</h2>
+            <span style={{ fontSize: 11, color: '#64748b', fontWeight: 600 }}>
+              {lang === 'en' ? '7 units' : '7 وحدات'}
+            </span>
+          </div>
+
+          <div className="units-perf-table-wrap">
+            <table className="units-perf-table">
+              <thead>
+                <tr>
+                  <th>{lang === 'en' ? 'Unit' : 'الوحدة'}</th>
+                  <th>{lang === 'en' ? 'Occupancy Rate' : 'نسبة الإشغال'}</th>
+                  <th>{lang === 'en' ? 'Bookings' : 'عدد الحجوزات'}</th>
+                  <th>{lang === 'en' ? 'Revenue' : 'الإيرادات'}</th>
+                  <th>{lang === 'en' ? 'Last Booking' : 'آخر حجز'}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {unitsPerformanceData.map((u) => {
+                  const unitName = lang === 'en' ? u.nameEn : u.name;
+                  const unitProperty = lang === 'en' ? u.propertyEn : u.property;
+                  const revenueVal = lang === 'en' ? u.revenueEn : u.revenue;
+                  const lastBookingVal = lang === 'en' ? u.lastBookingEn : u.lastBooking;
+
+                  return (
+                    <tr key={u.id}>
+                      {/* Unit */}
+                      <td>
+                        <div className="perf-unit-cell">
+                          <div className="perf-unit-thumb">
+                            {u.thumbSrc ? (
+                              <img
+                                src={u.thumbSrc}
+                                alt={unitName}
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = 'none';
+                                }}
+                              />
+                            ) : (
+                              <Home size={18} color="#94a3b8" />
+                            )}
+                          </div>
+                          <div className="perf-unit-info">
+                            <strong className="perf-unit-title">{unitName}</strong>
+                            <span className="perf-unit-prop">{unitProperty}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Occupancy */}
+                      <td>
+                        <div className="occupancy-cell">
+                          <span className="occupancy-val">{u.occupancyRate}%</span>
+                          <div className="occupancy-bar-bg">
+                            <div
+                              className="occupancy-bar-fill"
+                              style={{ width: `${u.occupancyRate}%` }}
+                            />
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Bookings Count */}
+                      <td>
+                        <strong>{u.bookingsCount}</strong>
+                      </td>
+
+                      {/* Revenue */}
+                      <td>
+                        <strong>{revenueVal}</strong>
+                      </td>
+
+                      {/* Last Booking */}
+                      <td>
+                        <span style={{ color: '#475569' }}>{lastBookingVal}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
     </div>
   );
 }
