@@ -2,6 +2,7 @@ export type DetailItem = { label: string; value: string };
 
 export type UnitDetailRecord = {
   id: string;
+  apiId?: number;
   number: string;
   name: string;
   code: string;
@@ -13,7 +14,12 @@ export type UnitDetailRecord = {
   statusTone: string;
   type: string;
   imageClass: string;
-  managementMode: 'تشغيل مستقل' | 'مزامنة حجوزات' | 'إدارة مختلطة';
+  imageUrl?: string;
+  images?: string[];
+  description?: string;
+  qrCodeUrl?: string;
+  storeUrl?: string;
+  managementMode: 'تشغيل مستقل' | 'مزامنة حجوزات' | 'إدارة مختلطة' | string;
   capacity: { guests: number; bedrooms: number; beds: number; bathrooms: number };
   stayDefaults: { checkIn: string; checkOut: string; cleaningMinutes: number; access: string };
   currentBooking?: { id: string; guest: string; channel: string; checkIn: string; checkOut: string; guests: number; amount: string };

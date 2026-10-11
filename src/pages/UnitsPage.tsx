@@ -483,7 +483,7 @@ export default function UnitsPage() {
         <div className="unit-stat-card">
           <div className="stat-info">
             <span className="stat-label">{lang === 'en' ? 'Total Units' : 'إجمالي الوحدات'}</span>
-            <strong className="stat-value">7</strong>
+            <strong className="stat-value">{unitsList.length}</strong>
           </div>
           <div className="stat-icon-wrap cyan">
             <Building2 size={24} />
@@ -493,7 +493,7 @@ export default function UnitsPage() {
         <div className="unit-stat-card">
           <div className="stat-info">
             <span className="stat-label">{lang === 'en' ? 'Guest Ready' : 'جاهزة للضيف'}</span>
-            <strong className="stat-value">3</strong>
+            <strong className="stat-value">{unitsList.filter((u) => u.status === 'ready').length}</strong>
           </div>
           <div className="stat-icon-wrap green">
             <BedDouble size={24} />
@@ -503,7 +503,7 @@ export default function UnitsPage() {
         <div className="unit-stat-card">
           <div className="stat-info">
             <span className="stat-label">{lang === 'en' ? 'Draft' : 'مسودة'}</span>
-            <strong className="stat-value">3</strong>
+            <strong className="stat-value">{unitsList.filter((u) => u.status === 'draft').length}</strong>
           </div>
           <div className="stat-icon-wrap orange">
             <Wrench size={24} />
@@ -513,7 +513,7 @@ export default function UnitsPage() {
         <div className="unit-stat-card">
           <div className="stat-info">
             <span className="stat-label">{lang === 'en' ? 'Inactive' : 'غير نشطة'}</span>
-            <strong className="stat-value">1</strong>
+            <strong className="stat-value">{unitsList.filter((u) => u.status === 'inactive').length}</strong>
           </div>
           <div className="stat-icon-wrap red">
             <ShieldAlert size={24} />
@@ -651,7 +651,11 @@ export default function UnitsPage() {
                             aria-label={`Select ${unit.name}`}
                           />
 
-                          <div className="unit-thumb-box">
+                          <Link
+                            to={`/app/units/${unit.code}`}
+                            className="unit-thumb-box"
+                            aria-label={unit.name}
+                          >
                             {unit.thumbPlaceholder === 'building' ? (
                               <div className="unit-thumb-placeholder">
                                 <Building2 size={18} />
@@ -670,7 +674,7 @@ export default function UnitsPage() {
                                 }}
                               />
                             )}
-                          </div>
+                          </Link>
 
                           <div className="unit-meta">
                             <Link
@@ -803,8 +807,8 @@ export default function UnitsPage() {
             <div className="pagination-counter">
               <span>
                 {lang === 'en'
-                  ? `Showing 1 - ${filteredUnits.length} of ${initialUnits.length} units`
-                  : `عرض 1 - ${filteredUnits.length} من ${initialUnits.length} وحدة`}
+                  ? `Showing 1 - ${filteredUnits.length} of ${unitsList.length} units`
+                  : `عرض 1 - ${filteredUnits.length} من ${unitsList.length} وحدة`}
               </span>
             </div>
 
@@ -857,7 +861,11 @@ export default function UnitsPage() {
                         <span className="card-code-badge">{unit.code}</span>
                         <span className="card-type-text">{getUnitTypeName(unit.type)}</span>
                       </div>
-                      <div className="card-thumb-box">
+                      <Link
+                        to={`/app/units/${unit.code}`}
+                        className="card-thumb-box"
+                        aria-label={unit.name}
+                      >
                         {unit.thumbPlaceholder === 'building' ? (
                           <div className="card-thumb-placeholder">
                             <Building2 size={20} />
@@ -876,7 +884,7 @@ export default function UnitsPage() {
                             }}
                           />
                         )}
-                      </div>
+                      </Link>
                     </div>
                   </div>
 

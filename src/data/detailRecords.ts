@@ -1,5 +1,309 @@
 import type { BookingDetailRecord, OperationDetailRecord, UnitDetailRecord } from '../types/details';
 
+const realUnits: UnitDetailRecord[] = [
+  {
+    id: 'UNT-YMFCHL',
+    apiId: 7,
+    number: '1204',
+    name: 'شقة الرمال الفاخرة - برج 4 (نسخة)',
+    code: 'UNT-YMFCHL',
+    property: 'أبراج الرمال السكنية',
+    city: 'الرياض',
+    district: 'العليا',
+    address: 'طريق الملك فهد، حي العليا، برج 4، الدور 12، شقة 1204',
+    status: 'مسودة',
+    statusTone: 'orange',
+    type: 'شقة',
+    imageClass: 'u1',
+    imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+    images: [
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+      '/unit-thumbs/thumb-1.png',
+    ],
+    description: 'شقة فاخرة بتصميم مودرن بالقرب من مراكز الأعمال في العليا.',
+    qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A%2F%2Fblueclean.backend2.kazamiza.com%2Fguest%2Fstore%2FUNT-YMFCHL',
+    storeUrl: 'https://blueclean.backend2.kazamiza.com/guest/store/UNT-YMFCHL',
+    managementMode: 'تشغيل مستقل',
+    capacity: { guests: 4, bedrooms: 2, beds: 3, bathrooms: 2 },
+    stayDefaults: { checkIn: '15:00', checkOut: '11:00', cleaningMinutes: 120, access: 'قفل ذكي' },
+    metrics: { occupancy: '72%', revenue: '8,400 ر.س', completedTasks: '14', rating: '4.9' },
+    integrations: [
+      { name: 'Airbnb', status: 'متصل', listingId: 'AIR-YMFCHL', lastSync: 'منذ 5 دقائق', tone: 'green' },
+    ],
+    upcomingOperations: [
+      { id: 'CLN-6091', type: 'تنظيف دوري', date: '2026-10-12 01:00', assignee: 'تعيين تلقائي', status: 'قيد التنفيذ', tone: 'blue' },
+    ],
+    notes: [
+      'شقة فاخرة بتصميم مودرن بالقرب من مراكز الأعمال في العليا.',
+      'تعليمات الدخول عبر القفل الذكي تُرسل تلقائيًا للضيف قبل الوصول.',
+    ],
+    activity: [
+      { title: 'تم إنشاء مهمة تنظيف دوري (CLN-6091)', time: 'منذ ساعتين', tone: 'blue' },
+      { title: 'تمت مزامنة حالة الوحدة مع Airbnb', time: 'منذ 5 دقائق', tone: 'green' },
+    ],
+  },
+  {
+    id: 'UNT-Q4HSI8',
+    apiId: 6,
+    number: '18',
+    name: 'فيلا النرجس VIP مسبح خاص (نسخة)',
+    code: 'UNT-Q4HSI8',
+    property: 'كمباوند النرجس ريزيدنس',
+    city: 'الرياض',
+    district: 'النرجس',
+    address: 'حي النرجس، شارع عثمان بن عفان، فيلا 18',
+    status: 'مسودة',
+    statusTone: 'orange',
+    type: 'فيلا',
+    imageClass: 'u2',
+    imageUrl: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800',
+    images: [
+      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800',
+      '/unit-thumbs/thumb-2.png',
+    ],
+    description: 'فيلا واسعة مع مسبح خاص وحديقة للعائلات.',
+    qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A%2F%2Fblueclean.backend2.kazamiza.com%2Fguest%2Fstore%2FUNT-Q4HSIB',
+    storeUrl: 'https://blueclean.backend2.kazamiza.com/guest/store/UNT-Q4HSIB',
+    managementMode: 'تشغيل مستقل',
+    capacity: { guests: 8, bedrooms: 4, beds: 6, bathrooms: 4 },
+    stayDefaults: { checkIn: '16:00', checkOut: '12:00', cleaningMinutes: 180, access: 'صندوق مفاتيح' },
+    metrics: { occupancy: '68%', revenue: '14,200 ر.س', completedTasks: '11', rating: '4.9' },
+    integrations: [
+      { name: 'Booking.com', status: 'متصل', listingId: 'BK-Q4HSIB', lastSync: 'منذ 10 دقائق', tone: 'green' },
+    ],
+    upcomingOperations: [
+      { id: 'CLN-2032', type: 'تنظيف وتجهيز', date: 'غدًا، 12:00 م', assignee: 'أحمد سالم', status: 'مجدولة', tone: 'blue' },
+    ],
+    notes: [
+      'فيلا واسعة مع مسبح خاص وحديقة للعائلات.',
+      'يرجى فحص مستوى تعقيم المسبح والحديقة قبل كل تسجيل دخول.',
+    ],
+    activity: [
+      { title: 'تم تحديث بيانات الفيلا', time: 'منذ 30 دقيقة', tone: 'blue' },
+      { title: 'تمت مزامنة الحجوزات من Booking.com', time: 'منذ ساعة', tone: 'green' },
+    ],
+  },
+  {
+    id: 'UNT-105',
+    apiId: 5,
+    number: '105',
+    name: 'شقة العليا 102 - صيانة دورية',
+    code: 'UNT-105',
+    property: 'عمارة العليا 12',
+    city: 'الرياض',
+    district: 'العليا',
+    address: 'حي العليا، شارع التحلية',
+    status: 'غير نشطة',
+    statusTone: 'red',
+    type: 'شقة',
+    imageClass: 'u3',
+    imageUrl: '/unit-thumbs/thumb-3.png',
+    images: ['/unit-thumbs/thumb-3.png'],
+    description: 'شقة فندقية في حي العليا بشارع التحلية خاضعة للصيانة الدورية.',
+    qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A%2F%2Fblueclean.backend2.kazamiza.com%2Fguest%2Fstore%2FUNT-105',
+    storeUrl: 'https://blueclean.backend2.kazamiza.com/guest/store/UNT-105',
+    managementMode: 'تشغيل مستقل',
+    capacity: { guests: 3, bedrooms: 1, beds: 2, bathrooms: 1 },
+    stayDefaults: { checkIn: '15:00', checkOut: '11:00', cleaningMinutes: 120, access: 'مفتاح مع الحارس' },
+    currentBooking: {
+      id: 'BK-261006-197',
+      guest: 'ahmed',
+      channel: 'مباشر',
+      checkIn: '2026-10-10',
+      checkOut: '2026-10-14',
+      guests: 3,
+      amount: '1,650 ر.س',
+    },
+    metrics: { occupancy: '60%', revenue: '5,200 ر.س', completedTasks: '9', rating: '4.7' },
+    integrations: [],
+    upcomingOperations: [
+      { id: 'MNT-0881', type: 'صيانة', date: 'اليوم، 02:00 م', assignee: 'خالد منصور', status: 'قيد التنفيذ', tone: 'orange' },
+    ],
+    notes: [
+      'المفتاح متوفر لدى حارس العمارة.',
+      'توجد صيانة دورية مجدولة للتكييف والإضاءة.',
+    ],
+    activity: [
+      { title: 'تسجيل إقامة حالية (BK-261006-197)', time: 'نشط الآن', tone: 'blue' },
+      { title: 'تحويل الحالة إلى صيانة دورية', time: 'منذ ساعتين', tone: 'orange' },
+    ],
+  },
+  {
+    id: 'UNT-104',
+    apiId: 4,
+    number: '104',
+    name: 'شاليه اليمامة للعائلات',
+    code: 'UNT-104',
+    property: 'منتجع اليمامة',
+    city: 'الرياض',
+    district: 'العليا',
+    address: 'شمال الرياض، مخرج 6',
+    status: 'مسودة',
+    statusTone: 'orange',
+    type: 'شاليه',
+    imageClass: 'u4',
+    imageUrl: '/unit-thumbs/thumb-4.png',
+    images: ['/unit-thumbs/thumb-4.png'],
+    description: 'شاليه عائلي متكامل في منتجع اليمامة مناسب للعطلات والمناسبات.',
+    qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A%2F%2Fblueclean.backend2.kazamiza.com%2Fguest%2Fstore%2FUNT-104',
+    storeUrl: 'https://blueclean.backend2.kazamiza.com/guest/store/UNT-104',
+    managementMode: 'تشغيل مستقل',
+    capacity: { guests: 10, bedrooms: 3, beds: 5, bathrooms: 3 },
+    stayDefaults: { checkIn: '15:00', checkOut: '11:00', cleaningMinutes: 150, access: 'استقبال' },
+    metrics: { occupancy: '75%', revenue: '11,800 ر.س', completedTasks: '13', rating: '4.8' },
+    integrations: [],
+    upcomingOperations: [
+      { id: 'CLN-2031', type: 'تنظيف وتجهيز', date: 'اليوم، 01:00 م', assignee: 'أحمد سالم', status: 'مجدولة', tone: 'blue' },
+    ],
+    notes: [
+      'تسليم واستلام المفاتيح عبر مكتب الاستقبال في المنتجع.',
+      'تجهيز الجلسات الخارجية قبل وصول العائلات.',
+    ],
+    activity: [
+      { title: 'تم فحص جاهزية الشاليه', time: 'منذ 45 دقيقة', tone: 'green' },
+    ],
+  },
+  {
+    id: 'UNT-103',
+    apiId: 3,
+    number: '103',
+    name: 'استوديو الكورنيش بإطلالة بحرية',
+    code: 'UNT-103',
+    property: 'أبراج الشاطئ',
+    city: 'جدة',
+    district: 'الشاطئ',
+    address: 'طريق الكورنيش، حي الشاطئ، الدور 8',
+    status: 'جاهزة للضيف',
+    statusTone: 'green',
+    type: 'استوديو',
+    imageClass: 'u5',
+    imageUrl: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+    images: [
+      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+      '/unit-thumbs/thumb-5.png',
+    ],
+    description: 'استوديو أنيق ومجهز بالكامل للعرسان ورجال الأعمال بإطلالة مباشرة على الكورنيش.',
+    qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A%2F%2Fblueclean.backend2.kazamiza.com%2Fguest%2Fstore%2FUNT-103',
+    storeUrl: 'https://blueclean.backend2.kazamiza.com/guest/store/UNT-103',
+    managementMode: 'تشغيل مستقل',
+    capacity: { guests: 2, bedrooms: 1, beds: 1, bathrooms: 1 },
+    stayDefaults: { checkIn: '14:00', checkOut: '11:00', cleaningMinutes: 90, access: 'قفل ذكي' },
+    metrics: { occupancy: '84%', revenue: '7,900 ر.س', completedTasks: '19', rating: '4.9' },
+    integrations: [
+      { name: 'Gathern', status: 'متصل', listingId: 'GTH-103', lastSync: 'منذ 4 دقائق', tone: 'green' },
+    ],
+    upcomingOperations: [
+      { id: 'SRV-1034', type: 'خدمة إضافية', date: 'اليوم، 02:30 م', assignee: 'أحمد سالم', status: 'مكتملة', tone: 'green' },
+    ],
+    notes: [
+      'استوديو أنيق ومجهز بالكامل للعرسان ورجال الأعمال.',
+      'التأكد من تجهيز ركن القهوة وإطلالة الشرفة قبل كل حجز.',
+    ],
+    activity: [
+      { title: 'الوحدة جاهزة لاستقبال الضيوف', time: 'منذ 20 دقيقة', tone: 'green' },
+      { title: 'تمت مزامنة التقويم مع Gathern', time: 'منذ 4 دقائق', tone: 'blue' },
+    ],
+  },
+  {
+    id: 'UNT-102',
+    apiId: 2,
+    number: '102',
+    name: 'فيلا النرجس VIP مسبح خاص',
+    code: 'UNT-102',
+    property: 'كمباوند النرجس ريزيدنس',
+    city: 'الرياض',
+    district: 'النرجس',
+    address: 'حي النرجس، شارع عثمان بن عفان، فيلا 18',
+    status: 'جاهزة للضيف',
+    statusTone: 'green',
+    type: 'فيلا',
+    imageClass: 'u6',
+    imageUrl: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800',
+    images: [
+      'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800',
+      '/unit-thumbs/thumb-6.png',
+    ],
+    description: 'فيلا واسعة مع مسبح خاص وحديقة للعائلات.',
+    qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A%2F%2Fblueclean.backend2.kazamiza.com%2Fguest%2Fstore%2FUNT-102',
+    storeUrl: 'https://blueclean.backend2.kazamiza.com/guest/store/UNT-102',
+    managementMode: 'تشغيل مستقل',
+    capacity: { guests: 8, bedrooms: 4, beds: 6, bathrooms: 4 },
+    stayDefaults: { checkIn: '16:00', checkOut: '12:00', cleaningMinutes: 180, access: 'صندوق مفاتيح' },
+    nextBooking: {
+      id: 'RES-2026-1842',
+      guest: 'عبدالله محمد',
+      channel: 'Booking.com',
+      checkIn: '15 أكتوبر 2026',
+      checkOut: '18 أكتوبر 2026',
+    },
+    metrics: { occupancy: '88%', revenue: '18,600 ر.س', completedTasks: '22', rating: '4.9' },
+    integrations: [
+      { name: 'Booking.com', status: 'متصل', listingId: 'BK-983402', lastSync: 'منذ دقيقتين', tone: 'green' },
+    ],
+    upcomingOperations: [
+      { id: 'CLN-2040', type: 'تنظيف وتجهيز', date: 'اليوم، 12:30 م', assignee: 'أحمد سالم', status: 'مكتملة', tone: 'green' },
+    ],
+    notes: [
+      'فيلا واسعة مع مسبح خاص وحديقة للعائلات.',
+      'صندوق المفاتيح بجانب البوابة الرئيسية للفيلا.',
+    ],
+    activity: [
+      { title: 'اكتملت مهمة التنظيف والتعقيم', time: 'منذ 15 دقيقة', tone: 'green' },
+      { title: 'تمت مزامنة الحجوزات مع Booking.com', time: 'منذ دقيقتين', tone: 'blue' },
+    ],
+  },
+  {
+    id: 'UNT-101',
+    apiId: 1,
+    number: '101',
+    name: 'شقة الرمال الفاخرة - برج 4',
+    code: 'UNT-101',
+    property: 'أبراج الرمال السكنية',
+    city: 'الرياض',
+    district: 'العليا',
+    address: 'طريق الملك فهد، حي العليا، برج 4، الدور 12، شقة 1204',
+    status: 'جاهزة للضيف',
+    statusTone: 'green',
+    type: 'شقة',
+    imageClass: 'u7',
+    imageUrl: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+    images: [
+      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+      'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+      '/unit-thumbs/thumb-7.png',
+    ],
+    description: 'شقة فاخرة بتصميم مودرن بالقرب من مراكز الأعمال في العليا.',
+    qrCodeUrl: 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A%2F%2Fblueclean.backend2.kazamiza.com%2Fguest%2Fstore%2FUNT-101',
+    storeUrl: 'https://blueclean.backend2.kazamiza.com/guest/store/UNT-101',
+    managementMode: 'تشغيل مستقل',
+    capacity: { guests: 4, bedrooms: 2, beds: 3, bathrooms: 2 },
+    stayDefaults: { checkIn: '15:00', checkOut: '11:00', cleaningMinutes: 120, access: 'قفل ذكي' },
+    nextBooking: {
+      id: 'RES-2026-1845',
+      guest: 'سارة أحمد',
+      channel: 'Airbnb',
+      checkIn: '14 أكتوبر 2026',
+      checkOut: '17 أكتوبر 2026',
+    },
+    metrics: { occupancy: '91%', revenue: '12,400 ر.س', completedTasks: '26', rating: '4.9' },
+    integrations: [
+      { name: 'Airbnb', status: 'متصل', listingId: 'AIR-77420', lastSync: 'منذ 5 دقائق', tone: 'green' },
+    ],
+    upcomingOperations: [
+      { id: 'CLN-2029', type: 'تنظيف وتجهيز', date: 'اليوم، 11:00 ص', assignee: 'أحمد سالم', status: 'مكتملة', tone: 'green' },
+    ],
+    notes: [
+      'شقة فاخرة بتصميم مودرن بالقرب من مراكز الأعمال في العليا.',
+      'تعليمات الدخول موجودة في تطبيق القفل الذكي وتُرسل للضيف تلقائيًا.',
+    ],
+    activity: [
+      { title: 'تم تحديث حالة الوحدة إلى جاهزة للضيف', time: 'منذ 18 دقيقة', tone: 'green' },
+      { title: 'تمت مزامنة بيانات الحجز مع Airbnb', time: 'منذ 35 دقيقة', tone: 'blue' },
+    ],
+  },
+];
+
 const unitSeeds = [
   ['101','برج النخيل','الرياض','مشغولة','blue','u1','إدارة مختلطة'],
   ['102','برج النخيل','الرياض','بانتظار التنظيف','orange','u2','مزامنة حجوزات'],
@@ -13,7 +317,7 @@ const unitSeeds = [
 
 const unitOperationIds = ['CLN-2029','CLN-2032','MNT-0881','CLN-2031','SRV-1034','CLN-2040','CLN-2042','MNT-0887'] as const;
 
-export const unitDetails: UnitDetailRecord[] = unitSeeds.map(([number,property,city,status,statusTone,imageClass,managementMode],index) => ({
+const legacyUnitDetails: UnitDetailRecord[] = unitSeeds.map(([number,property,city,status,statusTone,imageClass,managementMode],index) => ({
   id: `BLD-${number}`,
   number,
   name: `شقة ${number}`,
@@ -46,6 +350,8 @@ export const unitDetails: UnitDetailRecord[] = unitSeeds.map(([number,property,c
     { title: 'تم إنشاء مهمة تنظيف', time: 'منذ ساعة', tone: 'orange' },
   ],
 }));
+
+export const unitDetails: UnitDetailRecord[] = [...realUnits, ...legacyUnitDetails];
 
 export const operationDetails: OperationDetailRecord[] = [
   operation('CLN-2031','cleaning','تنظيف بعد المغادرة','تنظيف كامل وتجهيز قبل وصول الضيف التالي','304','برج الياسمين','u4','قيد التنفيذ','blue','عاجلة','red','حجز متزامن'),
@@ -109,8 +415,28 @@ function operation(id:string,kind:OperationDetailRecord['kind'],title:string,des
   };
 }
 
-export const getUnitDetail = (id?: string) =>
-  unitDetails.find(unit => unit.id === id || unit.code === id || unit.number === id || unit.id.endsWith(id || '') || (id && unit.code.includes(id))) || unitDetails[0];
+export const getUnitDetail = (id?: string) => {
+  if (!id) return unitDetails[0];
+  const normalized = id.trim().toUpperCase();
+  const alias = normalized === 'UNT-Q4HSIB' ? 'UNT-Q4HSI8' : normalized;
+  return (
+    unitDetails.find(
+      (unit) =>
+        unit.id.toUpperCase() === normalized ||
+        unit.code.toUpperCase() === normalized ||
+        unit.id.toUpperCase() === alias ||
+        unit.code.toUpperCase() === alias ||
+        String(unit.apiId) === normalized ||
+        unit.number === normalized
+    ) ||
+    unitDetails.find(
+      (unit) =>
+        unit.id.toUpperCase().endsWith(normalized) ||
+        unit.code.toUpperCase().includes(normalized)
+    ) ||
+    unitDetails[0]
+  );
+};
 export const getOperationDetail = (id?: string) => operationDetails.find(operation => operation.id === id);
 export const getBookingDetail = (id?: string) => bookingDetails.find(booking => booking.id === id);
 

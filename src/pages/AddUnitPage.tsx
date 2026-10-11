@@ -7,10 +7,11 @@ import {
 } from 'lucide-react';
 import { emptyUnitDraft, importedListings, integrationProviders, properties, unitCreationSteps } from '../data/unitCreation';
 import { getUnitDetail } from '../data/detailRecords';
-import { createUnit, type CreatedUnit } from '../services/unitService';
+import { createUnit, fetchClientUnitDetail, mapApiUnitToDetailRecord, type CreatedUnit } from '../services/unitService';
 import { fetchCities } from '../services/clientBookingService';
 import { SearchableSelect } from '../components/SearchableSelect';
 import type { CityInfo } from '../types/clientBooking';
+import type { UnitDetailRecord } from '../types/details';
 import type { IntegrationProvider, UnitCreationMode, UnitDraft, UnitManagementMode } from '../types/unitCreation';
 import { FAST_PROTOTYPE_MODE } from '../config/prototype';
 import './reference-pages.css';
@@ -35,56 +36,69 @@ export default function AddUnitPage() {
   }, []);
 
   useEffect(() => {
-    if (unitId) {
-      const unit = getUnitDetail(unitId);
-      if (unit) {
-        setDraft({
-          schemaVersion: 1,
-          selectedListingId: '',
-          source: { mode: 'manual' },
-          identity: {
-            name: unit.name,
-            code: unit.code,
-            propertyId: 'p1',
-            propertyName: unit.property,
-            type: unit.type,
-            status: unit.status === 'جاهزة للضيف' ? 'ready' : unit.status === 'قيد الصيانة' ? 'maintenance' : 'cleaning',
-            description: '',
-          },
-          location: {
-            city: unit.city,
-            district: unit.district,
-            address: unit.address,
-          },
-          capacity: {
-            maxGuests: unit.capacity.guests,
-            bedrooms: unit.capacity.bedrooms,
-            beds: unit.capacity.beds,
-            bathrooms: unit.capacity.bathrooms,
-          },
-          operations: {
-            managementMode: unit.managementMode === 'مزامنة حجوزات' || unit.managementMode === 'إدارة مختلطة' ? 'channel-sync' : 'operations-only',
-            cleaningDurationMinutes: unit.stayDefaults.cleaningMinutes,
-            checkInTime: unit.stayDefaults.checkIn,
-            checkOutTime: unit.stayDefaults.checkOut,
-            accessType: unit.stayDefaults.access === 'قفل ذكي' ? 'smart-lock' : 'manual',
-            cleaningTeamId: 'auto',
-            autoCleaningAfterCheckout: true,
-            arrivalReminder: true,
-            notes: unit.notes.join('\n'),
-          },
-          importOptions: { details: true, photos: true, reservations: true },
-          integrations: unit.integrations.map(intg => ({
-            provider: intg.name.toLowerCase().includes('booking') ? 'booking' : 'airbnb',
-            listingId: intg.listingId,
-            listingName: unit.name,
-            syncMode: 'full',
-          })),
-          media: { fileNames: [] },
-        });
-        setStep(2);
-      }
+    if (!unitId) return;
+    const applyUnitToDraft = (unit: UnitDetailRecord) => {
+      setDraft({
+        schemaVersion: 1,
+        selectedListingId: '',
+        source: { mode: 'manual' },
+        identity: {
+          name: unit.name,
+          code: unit.code,
+          propertyId: 'p1',
+          propertyName: unit.property,
+          type: unit.type,
+          status: unit.status === 'جاهزة للضيف' ? 'ready' : unit.status === 'قيد الصيانة' ? 'maintenance' : 'cleaning',
+          description: unit.description || '',
+        },
+        location: {
+          city: unit.city,
+          district: unit.district,
+          address: unit.address,
+        },
+        capacity: {
+          maxGuests: unit.capacity.guests,
+          bedrooms: unit.capacity.bedrooms,
+          beds: unit.capacity.beds,
+          bathrooms: unit.capacity.bathrooms,
+        },
+        operations: {
+          managementMode: unit.managementMode === 'مزامنة حجوزات' || unit.managementMode === 'إدارة مختلطة' ? 'channel-sync' : 'operations-only',
+          cleaningDurationMinutes: unit.stayDefaults.cleaningMinutes,
+          checkInTime: unit.stayDefaults.checkIn,
+          checkOutTime: unit.stayDefaults.checkOut,
+          accessType: unit.stayDefaults.access === 'قفل ذكي' ? 'smart-lock' : 'manual',
+          cleaningTeamId: 'auto',
+          autoCleaningAfterCheckout: true,
+          arrivalReminder: true,
+          notes: unit.notes.join('\n'),
+        },
+        importOptions: { details: true, photos: true, reservations: true },
+        integrations: unit.integrations.map(intg => ({
+          provider: intg.name.toLowerCase().includes('booking') ? 'booking' : 'airbnb',
+          listingId: intg.listingId,
+          listingName: unit.name,
+          syncMode: 'full',
+        })),
+        media: { fileNames: [] },
+      });
+      setStep(2);
+    };
+
+    const fallback = getUnitDetail(unitId);
+    if (fallback) {
+      applyUnitToDraft(fallback);
     }
+
+    let active = true;
+    fetchClientUnitDetail(unitId).then((apiUnit) => {
+      if (active && apiUnit) {
+        applyUnitToDraft(mapApiUnitToDetailRecord(apiUnit, fallback));
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, [unitId]);
 
   const selectedListing = useMemo(() => importedListings.find(item => item.id === draft.selectedListingId), [draft.selectedListingId]);
