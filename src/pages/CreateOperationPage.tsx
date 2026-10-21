@@ -150,7 +150,7 @@ export default function CreateOperationPage({ kind }: { kind: OperationKind }) {
       const created = await createOperation({
         ...draft,
         unitName: unit?.name,
-        unitCode: unit?.code || unit?.id || draft.unitId,
+        unitCode: (unit as any)?.code || unit?.id || draft.unitId,
         propertyName: unit?.property,
       });
       setCreatedId(created.id);

@@ -72,7 +72,7 @@ function mapPayloadToDetailRecord(
     id: createdId,
     kind: payload.kind,
     title: serviceTitle,
-    subtitle: payload.notes || payload.details?.description || 'طلب تشغيلي جديد',
+    subtitle: String(payload.notes || payload.details?.description || 'طلب تشغيلي جديد'),
     unit: unitName,
     unitCode,
     property,
