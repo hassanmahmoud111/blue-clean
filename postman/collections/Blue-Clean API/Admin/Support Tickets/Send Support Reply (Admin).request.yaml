@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/admin/support-tickets/SUP-1048/messages"
+method: POST
+headers:
+  Accept: application/json
+  Authorization: Bearer {{admin_token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "message": "استلمنا البلاغ وراجعنا سجل المزامنة. توجد محاولة متأخرة ونعمل على إعادة تشغيلها بأمان.",
+        "attachments": []
+    }
+order: 3000

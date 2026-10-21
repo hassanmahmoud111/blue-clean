@@ -1,0 +1,37 @@
+$kind: http-request
+url: "{{base_url}}/client/cleaning-orders"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "order_source_type": "manual",
+        "unit_id": 1,
+        "service_type": "تنظيف دوري",
+        "instructions": "تنظيف شامل وتجهيز الوحدة",
+        "execution_scope": [
+            "bedrooms",
+            "bathrooms",
+            "kitchen",
+            "floors",
+            "furnishings",
+            "supplies_check"
+        ],
+        "execution_date": "2026-09-12",
+        "start_time": "11:00 AM",
+        "end_time": "01:00 PM",
+        "priority": "normal",
+        "assignment_method": "auto",
+        "notify_worker": true,
+        "notify_supervisor": true,
+        "notify_guest": false,
+        "internal_notes": "طلب يدوي مجدول دورياً"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 5000

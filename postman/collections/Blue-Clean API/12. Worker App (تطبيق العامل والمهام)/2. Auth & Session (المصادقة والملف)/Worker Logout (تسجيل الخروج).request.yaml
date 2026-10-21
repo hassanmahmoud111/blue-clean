@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{base_url}}/worker/auth/logout"
+method: POST
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{worker_token}}"
+order: 4000

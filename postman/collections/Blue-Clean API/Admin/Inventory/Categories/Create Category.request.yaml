@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{base_url}}/admin/inventory/categories"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name_ar": "مواد التعقيم",
+        "name_en": "Sanitization Materials",
+        "description_ar": "وصف المواد المعقمة",
+        "description_en": "Description of sanitizers",
+        "is_active": true
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 2000

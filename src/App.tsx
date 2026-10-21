@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import AppShell from './components/AppShell';
 import PrototypeMode from './components/PrototypeMode';
-import { LoadingPage } from './components/ui';
+import PublicLoadingScreen from './components/PublicLoadingScreen';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const PublicPage = lazy(() => import('./pages/PublicPage'));
@@ -28,7 +28,7 @@ const AuthPage = lazy(() => import('./pages/AuthPage'));
 
 export default function App() {
   return (
-    <><PrototypeMode/><div className="app-intro" aria-hidden="true"><span><b>BluClean</b><small>إدارة أهدأ، تشغيل أذكى</small></span></div><Suspense fallback={<div className="mx-auto max-w-7xl p-6"><LoadingPage /></div>}>
+    <><PrototypeMode/><div className="app-intro" aria-hidden="true"><span><b>BluClean</b><small>إدارة أهدأ، تشغيل أذكى</small></span></div><Suspense fallback={<PublicLoadingScreen />}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/features" element={<PublicPage kind="features" />} />

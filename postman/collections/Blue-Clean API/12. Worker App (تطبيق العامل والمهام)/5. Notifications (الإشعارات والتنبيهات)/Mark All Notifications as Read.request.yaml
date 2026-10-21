@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{base_url}}/worker/notifications/mark-all-read"
+method: POST
+headers:
+  Authorization: Bearer {{worker_token}}
+  Accept: application/json
+order: 3000

@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{base_url}}/client/reports?period=last_30_days"
+method: GET
+headers:
+  Accept: application/json
+  Authorization: Bearer {{client_token}}
+queryParams:
+  - key: period
+    value: last_30_days
+    description: last_30_days, last_7_days, this_month, last_month, this_year, custom
+  - key: property_name
+    value: ""
+    disabled: true
+  - key: unit_id
+    value: ""
+    disabled: true
+  - key: booking_source
+    value: all
+    disabled: true
+order: 1000

@@ -1,0 +1,42 @@
+$kind: http-request
+url: "{{base_url}}/client/units"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name": "شقة 801 الفاخرة",
+        "code": "BLD-801",
+        "property_name": "برج الأندلس",
+        "unit_type": "apartment",
+        "city_id": 1,
+        "area_id": 1,
+        "detailed_address": "شارع الملك سلمان، برج الأندلس، الدور الثامن",
+        "guests_count": 4,
+        "bedrooms_count": 2,
+        "beds_count": 3,
+        "bathrooms_count": 2,
+        "image": "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
+        "images": [
+            "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800",
+            "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800"
+        ],
+        "management_mode": "independent",
+        "check_in_time": "15:00",
+        "check_out_time": "11:00",
+        "cleaning_duration": 120,
+        "default_team": "auto",
+        "entry_method": "smart_lock",
+        "status": "active",
+        "auto_clean_on_checkout": true,
+        "alert_before_guest_arrival": true,
+        "description": "شقة راقية ومجهزة بالكامل"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 2000

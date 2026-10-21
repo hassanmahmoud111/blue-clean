@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{base_url}}/worker/devices"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "fcm_token": "worker_fcm_token_sample_abc...",
+        "platform": "ios",
+        "device_id": "iphone_15_uuid"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{worker_token}}"
+order: 1000

@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/admin/services/1"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name_ar": "تنظيف عميق فاخر",
+        "description_ar": "وصف الخدمة المحدث"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 4000

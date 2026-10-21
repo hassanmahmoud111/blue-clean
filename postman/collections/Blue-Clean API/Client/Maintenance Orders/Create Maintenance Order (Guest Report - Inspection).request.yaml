@@ -1,0 +1,33 @@
+$kind: http-request
+name: Create Maintenance Order (Guest Report / Inspection)
+url: "{{base_url}}/client/maintenance-orders"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "order_source_type": "guest_report",
+        "booking_id": 1,
+        "issue_category": "تكييف",
+        "description": "المكيف في غرفة النوم الرئيسية لا يبرد ويصدر صوتاً عالياً",
+        "allow_entry": true,
+        "block_unit_temporarily": false,
+        "require_technical_report": true,
+        "execution_date": "2026-09-10",
+        "start_time": "11:00 AM",
+        "end_time": "01:00 PM",
+        "priority": "urgent",
+        "assignment_method": "auto",
+        "notify_worker": true,
+        "notify_supervisor": true,
+        "notify_guest": true,
+        "internal_notes": "تنسيق مباشر مع الضيف"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 4000

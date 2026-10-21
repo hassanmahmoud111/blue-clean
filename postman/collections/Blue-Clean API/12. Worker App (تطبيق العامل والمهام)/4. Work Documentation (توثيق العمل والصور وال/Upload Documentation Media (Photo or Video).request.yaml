@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{base_url}}/worker/tasks/cleaning/1/documentation"
+method: POST
+headers:
+  Authorization: Bearer {{worker_token}}
+  Accept: application/json
+body:
+  type: formdata
+  content:
+    - type: text
+      key: slot_key
+      value: bathroom
+    - type: text
+      key: title
+      value: الحمام
+    - type: file
+      key: file
+      src: []
+order: 2000

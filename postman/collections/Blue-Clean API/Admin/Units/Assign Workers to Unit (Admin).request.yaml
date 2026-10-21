@@ -1,0 +1,19 @@
+$kind: http-request
+description: إسناد قائمة من العمال (Multi-select) إلى الوحدة المحددة واستبدال التعيينات السابقة.
+url: "{{base_url}}/admin/units/1/assign-workers"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "worker_ids": [1, 2],
+        "notes": "إسناد لمهام النظافة الدورية"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 6000

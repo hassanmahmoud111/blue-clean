@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchClientReports } from '../services/clientReportsService';
 import type { ClientReportsData } from '../types/clientReports';
+import PublicLoadingScreen from '../components/PublicLoadingScreen';
 import './reports-page.css';
 
 const UNIT_THUMBS: Record<string, string> = {
@@ -139,6 +140,7 @@ export default function ReportsPage() {
   const [reportsData, setReportsData] = useState<ClientReportsData | null>(null);
   const [allProperties, setAllProperties] = useState<string[]>([]);
   const [allUnitsList, setAllUnitsList] = useState<Array<{ id: number; code?: string; name: string }>>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -147,24 +149,28 @@ export default function ReportsPage() {
       property_name: selectedProperty !== 'all' ? selectedProperty : undefined,
       unit_id: selectedUnit !== 'all' ? selectedUnit : undefined,
       chart_view: chartView,
-    }).then((data) => {
-      if (active && data) {
-        setReportsData(data);
-        if (selectedProperty === 'all' && selectedUnit === 'all' && Array.isArray(data.units_performance)) {
-          const props = Array.from(
-            new Set(data.units_performance.map((u) => u.property_name).filter(Boolean))
-          );
-          setAllProperties(props);
-          setAllUnitsList(
-            data.units_performance.map((u) => ({
-              id: u.id,
-              code: u.code,
-              name: u.name,
-            }))
-          );
+    })
+      .then((data) => {
+        if (active && data) {
+          setReportsData(data);
+          if (selectedProperty === 'all' && selectedUnit === 'all' && Array.isArray(data.units_performance)) {
+            const props = Array.from(
+              new Set(data.units_performance.map((u) => u.property_name).filter(Boolean))
+            );
+            setAllProperties(props);
+            setAllUnitsList(
+              data.units_performance.map((u) => ({
+                id: u.id,
+                code: u.code,
+                name: u.name,
+              }))
+            );
+          }
         }
-      }
-    });
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
     return () => {
       active = false;
     };
@@ -300,6 +306,10 @@ export default function ReportsPage() {
   const unitsPerformance = useMemo(() => {
     return reportsData?.units_performance || [];
   }, [reportsData]);
+
+  if (loading) {
+    return <PublicLoadingScreen />;
+  }
 
   return (
     <div className="reports-page-container">

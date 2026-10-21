@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/admin/extra-services?status=pending_assignment"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  status: pending_assignment
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 2000

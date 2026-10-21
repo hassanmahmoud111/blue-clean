@@ -26,6 +26,7 @@ import { Link } from 'react-router-dom';
 import { Tooltip } from '../components/ui';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchClientUnits } from '../services/unitService';
+import PublicLoadingScreen from '../components/PublicLoadingScreen';
 import './units-page.css';
 
 interface UnitRowData {
@@ -314,6 +315,7 @@ export default function UnitsPage() {
   const [selectedType, setSelectedType] = useState<string>(allTypesLabel);
   const [selectedCity, setSelectedCity] = useState<string>(allCitiesLabel);
   const [activeDropdown, setActiveDropdown] = useState<'status' | 'type' | 'city' | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
@@ -370,6 +372,8 @@ export default function UnitsPage() {
         });
         setUnitsList(mapped);
       }
+    }).finally(() => {
+      if (active) setLoading(false);
     });
     return () => {
       active = false;
@@ -442,6 +446,10 @@ export default function UnitsPage() {
       setSelectedIds(filteredUnits.map((u) => u.id));
     }
   };
+
+  if (loading) {
+    return <PublicLoadingScreen />;
+  }
 
   return (
     <div className="units-page-container">

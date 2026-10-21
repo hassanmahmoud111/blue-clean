@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/client/auth/resend-otp"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "email": "client@blueclean.com"
+    }
+auth:
+  type: noauth
+order: 9000

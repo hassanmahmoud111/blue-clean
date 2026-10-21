@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/admin/locations/areas/1"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name_ar": "حي النرجس المحدث",
+        "name_en": "Updated Al Narjis"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 4000

@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{base_url}}/admin/inventory/workers/1/movements"
+method: GET
+headers:
+  Authorization: Bearer {{admin_token}}
+  Accept: application/json
+order: 8000

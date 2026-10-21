@@ -1,0 +1,29 @@
+$kind: http-request
+name: 2. Place Guest Order (سلة المشتريات وإتمام الطلب)
+url: "{{base_url}}/guest/orders"
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: text
+  content: |-
+    {
+        "unit_code": "UNT-304",
+        "guest_name": "خالد عبد الله",
+        "guest_phone": "+966509988776",
+        "items": [
+            {
+                "item_id": 1,
+                "quantity": 1
+            },
+            {
+                "item_id": 2,
+                "quantity": 2
+            }
+        ],
+        "payment_method": "cash_on_delivery",
+        "delivery_time_slot": "التوصيل الفوري",
+        "notes": "يرجى التوصيل عند باب الشقة وطرق الباب بهدوء"
+    }
+order: 2000

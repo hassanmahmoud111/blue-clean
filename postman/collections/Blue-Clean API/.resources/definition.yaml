@@ -1,0 +1,8 @@
+$kind: collection
+description: Postman collection for Blue-Clean API endpoints.
+variables:
+  base_url: https://blueclean.backend2.kazamiza.com/api/v1
+  token: ""
+  client_token: ""
+  worker_token: ""
+  admin_token: ""

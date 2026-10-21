@@ -1,0 +1,12 @@
+$kind: http-request
+name: Mark All Admin Notifications as Read (تحديد جميع الإشعارات كمقروءة)
+description: تحديد جميع إشعارات لوحة التحكم كمقروءة وتصفير العداد.
+url: "{{base_url}}/admin/notifications/mark-all-read"
+method: POST
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 3000

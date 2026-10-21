@@ -1,0 +1,23 @@
+$kind: http-request
+url: "{{base_url}}/admin/services"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name_ar": "تنظيف وتطهير شامل",
+        "name_en": "Comprehensive Sanitization",
+        "description_ar": "وصف الخدمة بالعربي",
+        "description_en": "Service description in English",
+        "icon": "sparkles",
+        "is_active": true,
+        "sort_order": 5
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 2000

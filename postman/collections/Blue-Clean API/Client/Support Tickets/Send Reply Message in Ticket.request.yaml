@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/client/support-tickets/SUP-1048/messages"
+method: POST
+headers:
+  Accept: application/json
+  Authorization: Bearer {{client_token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "message": "شكراً جزيلاً لكم، ظهر الحجز الآن بنجاح.",
+        "attachments": []
+    }
+order: 4000

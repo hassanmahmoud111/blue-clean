@@ -1,0 +1,19 @@
+$kind: http-request
+name: Arrive At Site (وصلت للموقع وإظهار كود الدخول)
+url: "{{base_url}}/worker/tasks/cleaning/1/arrive"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "latitude": 21.5610,
+        "longitude": 39.1553
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{worker_token}}"
+order: 3000

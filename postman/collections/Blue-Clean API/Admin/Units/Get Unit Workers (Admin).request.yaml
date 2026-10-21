@@ -1,0 +1,11 @@
+$kind: http-request
+description: جلب قائمة العمال المسندين لوحدة محددة في لوحة التحكم.
+url: "{{base_url}}/admin/units/1/workers"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 7000

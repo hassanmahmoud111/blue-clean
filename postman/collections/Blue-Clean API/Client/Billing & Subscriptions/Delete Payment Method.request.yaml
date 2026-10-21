@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{base_url}}/client/billing/payment-methods/1"
+method: DELETE
+headers:
+  Accept: application/json
+  Authorization: Bearer {{client_token}}
+order: 8000

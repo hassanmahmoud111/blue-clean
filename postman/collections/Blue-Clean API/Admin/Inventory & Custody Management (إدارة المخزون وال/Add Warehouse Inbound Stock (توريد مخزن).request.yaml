@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/admin/inventory/items/1/add-stock"
+method: POST
+headers:
+  Authorization: Bearer {{admin_token}}
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: text
+  content: |-
+    {
+        "quantity": 50,
+        "notes": "توريد دفعة جديدة للمستودع"
+    }
+order: 3000

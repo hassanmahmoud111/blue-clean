@@ -1,0 +1,15 @@
+$kind: http-request
+name: Get Worker Tasks List (قائمة مهام العامل اليومية والقادمة)
+url: "{{base_url}}/worker/tasks?tab=today"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  - key: tab
+    value: today
+    description: today, upcoming, completed, all
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 1000

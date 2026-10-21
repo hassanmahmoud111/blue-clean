@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/admin/locations/areas?city_id=1"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  city_id: "1"
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 1000

@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{base_url}}/admin/dashboard/overview"
+method: GET
+headers:
+  Accept: application/json
+  Authorization: Bearer {{admin_token}}
+order: 1000

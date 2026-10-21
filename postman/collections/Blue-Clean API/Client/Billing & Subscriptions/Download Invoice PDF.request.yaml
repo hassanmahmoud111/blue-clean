@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{base_url}}/client/billing/invoices/1/download"
+method: GET
+headers:
+  Accept: application/json
+  Authorization: Bearer {{client_token}}
+order: 4000

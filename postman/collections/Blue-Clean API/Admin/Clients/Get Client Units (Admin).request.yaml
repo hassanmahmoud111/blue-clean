@@ -1,0 +1,8 @@
+$kind: http-request
+description: جلب قائمة جميع الوحدات الخاصة بعميل محدد لإضافتها في الـ Dropdown عند إنشاء طلب
+url: "{{base_url}}/admin/clients/2/units"
+method: GET
+headers:
+  Accept: application/json
+  Authorization: Bearer {{admin_token}}
+order: 5000

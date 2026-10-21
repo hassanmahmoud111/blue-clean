@@ -1,29 +1,69 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
   ArrowUpLeft,
   ArrowUpRight,
+  BarChart3,
   CalendarCheck2,
+  CalendarDays,
   Check,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
   CloudCog,
+  Headphones,
+  Home,
+  Layers3,
+  LoaderCircle,
   Mail,
+  MessageSquareText,
   Phone,
   RefreshCw,
   Send,
+  ShieldCheck,
   Sparkles,
+  UsersRound,
+  Wrench,
 } from 'lucide-react';
 import { PublicFooter, PublicHeader } from '../components/PublicChrome';
+import { PublicLoadingScreen } from '../components/PublicLoadingScreen';
 import { companyValues, contactChannels, featureCards, howSteps, plans } from '../data/publicPages';
 import { useLanguage } from '../context/LanguageContext';
+import {
+  fetchGlobalNewSettings,
+  fetchGlobalPackages,
+  formatPackageBadge,
+  formatPackagePrice,
+  formatPackageUnits,
+  getPackageButtonText,
+  getPackageFeatures,
+  resolveLocalized,
+  submitContactUs,
+  type ApiPackageItem,
+  type GlobalNewSettingsData,
+} from '../services/landingService';
 import './landing-reference.css';
 import './public-pages.css';
 
 export type PublicPageKind = 'features' | 'how' | 'pricing' | 'about' | 'contact';
+
+function getFeatureIcon(name?: string) {
+  if (!name) return Sparkles;
+  const n = name.toLowerCase();
+  if (n.includes('house') || n.includes('home')) return Home;
+  if (n.includes('calendar')) return CalendarDays;
+  if (n.includes('sparkle') || n.includes('spray') || n.includes('clean')) return Sparkles;
+  if (n.includes('wrench') || n.includes('tool') || n.includes('screwdriver')) return Wrench;
+  if (n.includes('headset') || n.includes('phone') || n.includes('support')) return Headphones;
+  if (n.includes('chart') || n.includes('bar') || n.includes('report') || n.includes('column')) return BarChart3;
+  if (n.includes('shield') || n.includes('lock') || n.includes('security')) return ShieldCheck;
+  if (n.includes('sync') || n.includes('refresh')) return RefreshCw;
+  if (n.includes('message') || n.includes('chat')) return MessageSquareText;
+  if (n.includes('user') || n.includes('team')) return UsersRound;
+  return Sparkles;
+}
 
 interface PageMetaRecord {
   eyebrowAr: string;
@@ -69,11 +109,11 @@ const pageMeta: Record<PublicPageKind, PageMetaRecord> = {
   },
   contact: {
     eyebrowAr: 'فريقنا قريب منك',
-    eyebrowEn: 'We Are Here to Help',
+    eyebrowEn: 'Our team is close by',
     titleAr: 'تواصل معنا',
-    titleEn: 'Contact Our Team',
-    descAr: 'أرسل سؤالك أو اطلب عرضًا توضيحيًا، وسيتواصل معك الفريق في أقرب وقت.',
-    descEn: 'Send us your inquiry or request a demo, and our team will get back to you promptly.',
+    titleEn: 'Contact us',
+    descAr: 'أرسل استفسارك أو اطلب عرضاً توضيحياً وسيعاود فريقنا التواصل معك في أقرب وقت.',
+    descEn: 'Send a question or request a demo, and our team will get back to you shortly.',
   },
 };
 
@@ -81,15 +121,61 @@ export default function PublicPage({ kind }: { kind: PublicPageKind }) {
   const { lang, isRTL } = useLanguage();
   const meta = pageMeta[kind];
 
+  const [settings, setSettings] = useState<GlobalNewSettingsData | null>(null);
+  const [packages, setPackages] = useState<ApiPackageItem[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([fetchGlobalNewSettings(), fetchGlobalPackages()])
+      .then(([s, p]) => {
+        if (!active) return;
+        if (s) setSettings(s);
+        if (p && p.length > 0) setPackages(p);
+      })
+      .catch(err => {
+        console.warn('API error in PublicPage:', err);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Section-specific dynamic hero resolution
+  let eyebrow = lang === 'en' ? meta.eyebrowEn : meta.eyebrowAr;
+  let title = lang === 'en' ? meta.titleEn : meta.titleAr;
+  let desc = lang === 'en' ? meta.descEn : meta.descAr;
+
+  if (kind === 'about' && settings?.about_us?.hero) {
+    eyebrow = resolveLocalized(settings.about_us.hero.eyebrow, lang) || eyebrow;
+    title = resolveLocalized(settings.about_us.hero.title, lang) || title;
+    desc = resolveLocalized(settings.about_us.hero.desc, lang) || desc;
+  } else if (kind === 'how' && settings?.how_it_works_section?.hero) {
+    eyebrow = resolveLocalized(settings.how_it_works_section.hero.eyebrow, lang) || eyebrow;
+    title = resolveLocalized(settings.how_it_works_section.hero.title, lang) || title;
+    desc = resolveLocalized(settings.how_it_works_section.hero.desc, lang) || desc;
+  } else if (kind === 'contact' && settings?.contact_us_section?.hero) {
+    eyebrow = resolveLocalized(settings.contact_us_section.hero.eyebrow, lang) || eyebrow;
+    title = resolveLocalized(settings.contact_us_section.hero.title, lang) || title;
+    desc = resolveLocalized(settings.contact_us_section.hero.desc, lang) || desc;
+  }
+
+  if (loading) {
+    return <PublicLoadingScreen />;
+  }
+
   return (
     <div className="reference-landing public-site-page" dir={isRTL ? 'rtl' : 'ltr'}>
       <PublicHeader />
       <main>
         <section className={`public-page-hero ${kind}`}>
           <div>
-            <span>{lang === 'en' ? meta.eyebrowEn : meta.eyebrowAr}</span>
-            <h1>{lang === 'en' ? meta.titleEn : meta.titleAr}</h1>
-            <p>{lang === 'en' ? meta.descEn : meta.descAr}</p>
+            <span>{eyebrow}</span>
+            <h1>{title}</h1>
+            <p>{desc}</p>
             {kind !== 'contact' && (
               <div>
                 <Link to="/register" className="public-main-cta">
@@ -105,11 +191,11 @@ export default function PublicPage({ kind }: { kind: PublicPageKind }) {
           <HeroVisual kind={kind} />
         </section>
 
-        {kind === 'features' && <FeaturesContent />}
-        {kind === 'how' && <HowContent />}
-        {kind === 'pricing' && <PricingContent />}
-        {kind === 'about' && <AboutContent />}
-        {kind === 'contact' && <ContactContent />}
+        {kind === 'features' && <FeaturesContent settings={settings} />}
+        {kind === 'how' && <HowContent settings={settings} />}
+        {kind === 'pricing' && <PricingContent packages={packages} />}
+        {kind === 'about' && <AboutContent settings={settings} />}
+        {kind === 'contact' && <ContactContent settings={settings} />}
       </main>
       <PublicFooter />
     </div>
@@ -119,15 +205,57 @@ export default function PublicPage({ kind }: { kind: PublicPageKind }) {
 function HeroVisual({ kind }: { kind: PublicPageKind }) {
   const { lang } = useLanguage();
 
+  if (kind === 'contact') {
+    const contactItems =
+      lang === 'en'
+        ? [
+            { title: 'Arabic support', sub: 'Every detail in one place', tone: 'tone-blue' },
+            { title: 'Fast response', sub: 'Designed around the way you work', tone: 'tone-green' },
+            { title: 'Specialist team', sub: 'Designed around the way you work', tone: 'tone-orange' },
+          ]
+        : [
+            { title: 'دعم باللغة العربية', sub: 'كل التفاصيل في مكان واحد', tone: 'tone-blue' },
+            { title: 'استجابة سريعة', sub: 'مصمم بما يناسب طريقة عملك', tone: 'tone-green' },
+            { title: 'فريق متخصص', sub: 'مصمم بما يناسب طريقة عملك', tone: 'tone-orange' },
+          ];
+
+    return (
+      <div className="public-hero-visual">
+        <span className="public-hero-orbit">
+          <i />
+          <i />
+          <i />
+        </span>
+        <div className="public-hero-window contact-hero-card">
+          <header>
+            <b>BluClean</b>
+            <div className="hero-card-dots">
+              <i />
+              <i />
+              <i />
+            </div>
+          </header>
+          {contactItems.map((item) => (
+            <div key={item.title}>
+              <i className={`tone-badge ${item.tone}`}>
+                <Check size={14} strokeWidth={3} />
+              </i>
+              <span>
+                <b>{item.title}</b>
+                <small>{item.sub}</small>
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   const labels =
     kind === 'pricing'
       ? lang === 'en'
         ? ['Flexible Plans', 'No Hidden Fees', 'Upgrade Anytime']
         : ['باقة مرنة', 'بدون رسوم مخفية', 'ترقية في أي وقت']
-      : kind === 'contact'
-      ? lang === 'en'
-        ? ['Bilingual Support', 'Rapid Response', 'Dedicated Team']
-        : ['دعم عربي', 'رد سريع', 'فريق متخصص']
       : lang === 'en'
       ? ['Unified Bookings', 'Organized Turnover', 'Clear Analytics']
       : ['حجوزات موحدة', 'تشغيل منظم', 'تقارير واضحة'];
@@ -170,8 +298,21 @@ function HeroVisual({ kind }: { kind: PublicPageKind }) {
   );
 }
 
-function FeaturesContent() {
+function FeaturesContent({ settings }: { settings: GlobalNewSettingsData | null }) {
   const { lang, isRTL } = useLanguage();
+
+  const items =
+    settings?.features_section?.items && settings.features_section.items.length > 0
+      ? settings.features_section.items.map(f => ({
+          icon: getFeatureIcon(f.icon),
+          title: resolveLocalized(f.title, lang),
+          text: resolveLocalized(f.text, lang),
+        }))
+      : featureCards.map(f => ({
+          icon: f.icon,
+          title: lang === 'en' ? f.titleEn : f.title,
+          text: lang === 'en' ? f.textEn : f.text,
+        }));
 
   return (
     <>
@@ -182,17 +323,17 @@ function FeaturesContent() {
           text={
             lang === 'en'
               ? 'Modular components working in harmony to streamline hosting operations.'
-              : 'مكونات مستقلة ومترابطة يمكن ربطها بالخدمات الخلفية لاحقًا بسهولة.'
+              : 'مكونات مستقلة ومترابطة يمكن ربطها بالخدمات الخلفية بسهولة.'
           }
         />
         <div className="public-feature-grid">
-          {featureCards.map(({ icon: Icon, title, titleEn, text, textEn }) => (
+          {items.map(({ icon: Icon, title, text }) => (
             <article key={title}>
               <span>
                 <Icon size={24} />
               </span>
-              <h2>{lang === 'en' ? titleEn : title}</h2>
-              <p>{lang === 'en' ? textEn : text}</p>
+              <h2>{title}</h2>
+              <p>{text}</p>
               <Link to="/register">
                 <span>{lang === 'en' ? 'Try Feature' : 'جرّب الميزة'}</span>
                 {isRTL ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
@@ -212,14 +353,27 @@ function FeaturesContent() {
   );
 }
 
-function HowContent() {
+function HowContent({ settings }: { settings: GlobalNewSettingsData | null }) {
   const { lang } = useLanguage();
+
+  const steps =
+    settings?.how_it_works_section?.steps && settings.how_it_works_section.steps.length > 0
+      ? settings.how_it_works_section.steps.map(s => ({
+          number: s.number,
+          title: resolveLocalized(s.title, lang),
+          text: resolveLocalized(s.text, lang),
+        }))
+      : howSteps.map(s => ({
+          number: s.number,
+          title: lang === 'en' ? s.titleEn : s.title,
+          text: lang === 'en' ? s.textEn : s.text,
+        }));
 
   return (
     <>
       <section className="public-section">
         <SectionTitle
-          eyebrow={lang === 'en' ? 'Five Easy Steps' : 'خمس خطوات'}
+          eyebrow={lang === 'en' ? 'Easy Steps' : 'خطوات بسيطة'}
           title={lang === 'en' ? 'From Adding a Unit to Tracking Performance' : 'من إضافة الوحدة إلى متابعة الأداء'}
           text={
             lang === 'en'
@@ -228,12 +382,12 @@ function HowContent() {
           }
         />
         <div className="how-steps">
-          {howSteps.map(step => (
+          {steps.map(step => (
             <article key={step.number}>
               <span>{step.number}</span>
               <div>
-                <h2>{lang === 'en' ? step.titleEn : step.title}</h2>
-                <p>{lang === 'en' ? step.textEn : step.text}</p>
+                <h2>{step.title}</h2>
+                <p>{step.text}</p>
               </div>
             </article>
           ))}
@@ -298,8 +452,35 @@ function HowContent() {
   );
 }
 
-function PricingContent() {
+function PricingContent({ packages }: { packages: ApiPackageItem[] | null }) {
   const { lang, isRTL } = useLanguage();
+
+  const displayPlans =
+    packages && packages.length > 0
+      ? packages.map(pkg => ({
+          id: String(pkg.id),
+          name: (lang === 'en' ? pkg.name_en : pkg.name_ar) || pkg.name,
+          description: (lang === 'en' ? pkg.description_en : pkg.description_ar) || pkg.description || '',
+          price: formatPackagePrice(pkg, lang),
+          units: formatPackageUnits(pkg, lang),
+          badge: formatPackageBadge(pkg, lang),
+          features: getPackageFeatures(pkg, lang),
+          buttonText: getPackageButtonText(pkg, lang),
+          featured: !!pkg.is_popular,
+          isCustomPrice: pkg.price === null,
+        }))
+      : plans.map(p => ({
+          id: p.name,
+          name: lang === 'en' ? p.nameEn : p.name,
+          description: lang === 'en' ? p.descriptionEn : p.description,
+          price: p.price === 'تواصل معنا' ? (lang === 'en' ? 'Contact Us' : 'تواصل معنا') : `${p.price} ${lang === 'en' ? 'SAR / month' : 'ر.س / شهريًا'}`,
+          units: lang === 'en' ? p.unitsEn : p.units,
+          badge: p.featured ? (lang === 'en' ? 'Most Popular' : 'الأكثر اختيارًا') : null,
+          features: lang === 'en' ? p.featuresEn : p.features,
+          buttonText: p.price === 'تواصل معنا' ? (lang === 'en' ? 'Request a Quote' : 'اطلب عرضًا') : (lang === 'en' ? 'Get Started' : 'ابدأ الآن'),
+          featured: p.featured,
+          isCustomPrice: p.price === 'تواصل معنا',
+        }));
 
   return (
     <>
@@ -310,44 +491,29 @@ function PricingContent() {
           text={
             lang === 'en'
               ? 'Transparent pricing with full operational control. Upgrade or modify tiers whenever you scale.'
-              : 'الأسعار المعروضة تجريبية للواجهة حاليًا ويمكن ربطها بنظام الفوترة لاحقًا.'
+              : 'أسعار واضحة وباقات مرنة تناسب حجم محفظتك وتساعدك على التوسع بسهولة.'
           }
         />
         <div className="pricing-grid">
-          {plans.map(plan => (
-            <article className={plan.featured ? 'featured' : ''} key={plan.name}>
-              {plan.featured && <em>{lang === 'en' ? 'Most Popular' : 'الأكثر اختيارًا'}</em>}
-              <h2>{lang === 'en' ? plan.nameEn : plan.name}</h2>
-              <p>{lang === 'en' ? plan.descriptionEn : plan.description}</p>
+          {displayPlans.map(plan => (
+            <article className={plan.featured ? 'featured' : ''} key={plan.id}>
+              {plan.badge && <em>{plan.badge}</em>}
+              <h2>{plan.name}</h2>
+              {plan.description && <p>{plan.description}</p>}
               <div className="plan-price">
-                {plan.price === 'تواصل معنا' ? (
-                  <strong>{lang === 'en' ? 'Contact Us' : 'تواصل معنا'}</strong>
-                ) : (
-                  <>
-                    <strong>{plan.price}</strong>
-                    <span>{lang === 'en' ? 'SAR / month' : 'ر.س / شهريًا'}</span>
-                  </>
-                )}
+                <strong>{plan.price}</strong>
               </div>
-              <b className="plan-units">{lang === 'en' ? plan.unitsEn : plan.units}</b>
+              {plan.units && <b className="plan-units">{plan.units}</b>}
               <ul>
-                {(lang === 'en' ? plan.featuresEn : plan.features).map(feature => (
-                  <li key={feature}>
+                {plan.features.map((feature, fIdx) => (
+                  <li key={fIdx}>
                     <CheckCircle2 size={16} />
-                    {feature}
+                    <span>{feature}</span>
                   </li>
                 ))}
               </ul>
-              <Link to={plan.price === 'تواصل معنا' ? '/contact' : '/register'}>
-                <span>
-                  {plan.price === 'تواصل معنا'
-                    ? lang === 'en'
-                      ? 'Request a Quote'
-                      : 'اطلب عرضًا'
-                    : lang === 'en'
-                    ? 'Get Started'
-                    : 'ابدأ الآن'}
-                </span>
+              <Link to={plan.isCustomPrice ? '/contact' : '/register'}>
+                <span>{plan.buttonText}</span>
                 {isRTL ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
               </Link>
             </article>
@@ -374,8 +540,21 @@ function PricingContent() {
   );
 }
 
-function AboutContent() {
+function AboutContent({ settings }: { settings: GlobalNewSettingsData | null }) {
   const { lang } = useLanguage();
+
+  const values =
+    settings?.about_us?.values && settings.about_us.values.length > 0
+      ? settings.about_us.values.map(v => ({
+          icon: getFeatureIcon(v.icon),
+          title: resolveLocalized(v.title, lang),
+          text: resolveLocalized(v.text, lang),
+        }))
+      : companyValues.map(v => ({
+          icon: v.icon,
+          title: lang === 'en' ? v.titleEn : v.title,
+          text: lang === 'en' ? v.textEn : v.text,
+        }));
 
   return (
     <>
@@ -410,11 +589,11 @@ function AboutContent() {
           title={lang === 'en' ? 'Principles Guiding Everything We Build' : 'المبادئ التي نبني عليها المنتج'}
         />
         <div className="values-grid">
-          {companyValues.map(({ icon: Icon, title, titleEn, text, textEn }) => (
+          {values.map(({ icon: Icon, title, text }) => (
             <article key={title}>
               <Icon size={25} />
-              <h3>{lang === 'en' ? titleEn : title}</h3>
-              <p>{lang === 'en' ? textEn : text}</p>
+              <h3>{title}</h3>
+              <p>{text}</p>
             </article>
           ))}
         </div>
@@ -431,119 +610,231 @@ function AboutContent() {
   );
 }
 
-function ContactContent() {
-  const { lang } = useLanguage();
-  const [submitted, setSubmitted] = useState(false);
+function ContactContent({ settings }: { settings: GlobalNewSettingsData | null }) {
+  const { lang, isRTL } = useLanguage();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [requestType, setRequestType] = useState('');
+  const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
-    setSubmitted(true);
+    if (submitting) return;
+
+    setSubmitting(true);
+    setFeedback(null);
+
+    const res = await submitContactUs({
+      name,
+      email,
+      phone,
+      request_type: requestType || 'general',
+      message,
+    });
+
+    setSubmitting(false);
+
+    if (res.success) {
+      setFeedback({
+        type: 'success',
+        message:
+          lang === 'en'
+            ? 'Thank you! Your message has been sent successfully. Our team will contact you shortly.'
+            : (res.message || 'تم إرسال رسالتك بنجاح، وسنتواصل معك في أقرب وقت.'),
+      });
+      setName('');
+      setEmail('');
+      setPhone('');
+      setRequestType('');
+      setMessage('');
+    } else {
+      setFeedback({
+        type: 'error',
+        message:
+          res.message ||
+          (lang === 'en'
+            ? 'Failed to send message, please try again.'
+            : 'حدث خطأ أثناء الإرسال، يرجى المحاولة مرة أخرى.'),
+      });
+    }
   }
 
+  const channels = [
+    {
+      icon: Headphones,
+      title: lang === 'en' ? 'Sales team' : 'فريق المبيعات',
+      value: 'sales@bluclean.sa',
+      note: lang === 'en' ? 'For plans and business offers' : 'للخطط وعروض الشركات',
+    },
+    {
+      icon: MessageSquareText,
+      title: lang === 'en' ? 'Support & help' : 'الدعم والمساعدة',
+      value: 'support@bluclean.sa',
+      note: lang === 'en' ? 'We reply during business hours' : 'نرد خلال ساعات العمل',
+    },
+    {
+      icon: Home,
+      title: lang === 'en' ? 'Office' : 'المكتب',
+      value: lang === 'en' ? 'Riyadh, Saudi Arabia' : 'الرياض، المملكة العربية السعودية',
+      note: lang === 'en' ? 'Sunday to Thursday' : 'الأحد إلى الخميس',
+    },
+  ];
+
   return (
-    <section className="public-section contact-layout">
-      <div className="contact-channels">
-        <SectionTitle
-          eyebrow={lang === 'en' ? 'Get in Touch' : 'طرق التواصل'}
-          title={lang === 'en' ? 'Choose the Most Convenient Channel' : 'اختر الطريقة الأنسب لك'}
-          text={
-            lang === 'en'
-              ? 'Send your inquiry and our dedicated team will assist you shortly.'
-              : 'أرسل استفسارك وسيتواصل معك فريقنا المتخصص لمساعدتك.'
-          }
-        />
-        {contactChannels.map(({ icon: Icon, title, titleEn, value, note, noteEn }) => (
-          <article key={title}>
-            <span>
-              <Icon size={21} />
-            </span>
-            <div>
-              <h2>{lang === 'en' ? titleEn : title}</h2>
-              <b>{value}</b>
-              <p>{lang === 'en' ? noteEn : note}</p>
+    <section className="public-section contact-layout-grid" dir={isRTL ? 'rtl' : 'ltr'}>
+      <div className="contact-left-col">
+        <span className="contact-badge-pill">
+          {lang === 'en' ? 'Ways to reach us' : 'طرق التواصل'}
+        </span>
+        <h2 className="contact-left-title">
+          {lang === 'en' ? 'Pick what works best for you' : 'اختر ما يناسبك'}
+        </h2>
+        <p className="contact-left-subnote">
+          {lang === 'en'
+            ? 'This is front-end only for now; sending will be connected to the back end later.'
+            : 'نسعد دائماً بتواصلكم المباشر عبر قنواتنا المعتمدة لخدمتكم فوراً.'}
+        </p>
+
+        <div className="contact-channels-list">
+          {channels.map(({ icon: Icon, title, value, note }) => (
+            <div key={title} className="contact-channel-card">
+              <span className="contact-channel-icon">
+                <Icon size={20} />
+              </span>
+              <div className="contact-channel-info">
+                <span className="contact-channel-label">{title}</span>
+                <strong className="contact-channel-val">{value}</strong>
+                {note && <small className="contact-channel-note">{note}</small>}
+              </div>
             </div>
-          </article>
-        ))}
-        <div className="contact-quick">
-          <Phone size={20} />
-          <span>
-            <b>{lang === 'en' ? 'Need a Quick Callback?' : 'هل تحتاج ردًا سريعًا؟'}</b>
+          ))}
+        </div>
+
+        <div className="contact-quick-call">
+          <div className="contact-quick-call-icon">
+            <Phone size={18} />
+          </div>
+          <div className="contact-quick-call-text">
+            <b>{lang === 'en' ? 'Need a quick reply?' : 'هل تحتاج رداً سريعاً؟'}</b>
             <p>
               {lang === 'en'
-                ? 'Leave your contact details and we will schedule an intro call.'
+                ? "Leave your details and we'll arrange an intro call."
                 : 'اترك بياناتك وسنرتب مكالمة تعريفية.'}
             </p>
-          </span>
+          </div>
         </div>
       </div>
 
-      <form className="contact-form" onSubmit={submit}>
-        <header>
-          <Mail size={24} />
+      <div className="contact-form-container">
+        <header className="contact-form-header">
+          <div className="contact-form-header-icon">
+            <Mail size={22} />
+          </div>
           <div>
-            <h2>{lang === 'en' ? 'Send Us a Message' : 'أرسل رسالتك'}</h2>
-            <p>
+            <h2 className="contact-form-header-title">
+              {lang === 'en' ? 'Send your message' : 'أرسل رسالتك'}
+            </h2>
+            <p className="contact-form-header-sub">
               {lang === 'en'
-                ? 'Fill in your details and our team will be in touch.'
-                : 'املأ البيانات وسنتواصل معك.'}
+                ? 'Fill in your details and we will get in touch.'
+                : 'املأ بياناتك وسنتواصل معك.'}
             </p>
           </div>
         </header>
 
-        <label>
-          {lang === 'en' ? 'Full Name *' : 'الاسم الكامل *'}
-          <input required placeholder={lang === 'en' ? 'Enter your full name' : 'اكتب اسمك'} />
-        </label>
+        <form className="contact-form-body" onSubmit={submit}>
+          {feedback && (
+            <div className={`contact-alert-banner ${feedback.type}`} role="alert">
+              {feedback.type === 'success' ? <CheckCircle2 size={18} /> : null}
+              <span>{feedback.message}</span>
+            </div>
+          )}
 
-        <div>
-          <label>
-            {lang === 'en' ? 'Email Address *' : 'البريد الإلكتروني *'}
-            <input required type="email" placeholder="name@example.com" />
-          </label>
-          <label>
-            {lang === 'en' ? 'Phone Number *' : 'رقم الجوال *'}
-            <input required type="tel" placeholder="+966 5X XXX XXXX" />
-          </label>
-        </div>
+          <div className="contact-field-group">
+            <label>{lang === 'en' ? 'Full name' : 'الاسم الكامل'}</label>
+            <input
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={lang === 'en' ? 'Your name' : 'اسمك الكريم'}
+            />
+          </div>
 
-        <label>
-          {lang === 'en' ? 'Inquiry Type *' : 'نوع الطلب *'}
-          <select defaultValue="" required>
-            <option value="" disabled>
-              {lang === 'en' ? 'Select inquiry type' : 'اختر نوع الطلب'}
-            </option>
-            <option>{lang === 'en' ? 'Platform Demo' : 'عرض توضيحي'}</option>
-            <option>{lang === 'en' ? 'Pricing & Plans' : 'استفسار عن الأسعار'}</option>
-            <option>{lang === 'en' ? 'Support & Help' : 'دعم ومساعدة'}</option>
-            <option>{lang === 'en' ? 'Partnership' : 'شراكة'}</option>
-          </select>
-        </label>
+          <div className="contact-fields-split">
+            <div className="contact-field-group">
+              <label>{lang === 'en' ? 'Email' : 'البريد الإلكتروني'}</label>
+              <input
+                required
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@example.com"
+              />
+            </div>
 
-        <label>
-          {lang === 'en' ? 'Message *' : 'الرسالة *'}
-          <textarea required placeholder={lang === 'en' ? 'How can we assist you?' : 'كيف يمكننا مساعدتك؟'} />
-        </label>
+            <div className="contact-field-group">
+              <label>{lang === 'en' ? 'Mobile number' : 'رقم الجوال'}</label>
+              <input
+                required
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+966 5X XXX XXXX"
+              />
+            </div>
+          </div>
 
-        <button type="submit">
-          <Send size={17} />
-          {submitted
-            ? lang === 'en'
-              ? 'Message Received'
-              : 'تم استلام الرسالة'
-            : lang === 'en'
-            ? 'Send Message'
-            : 'إرسال الرسالة'}
-        </button>
+          <div className="contact-field-group">
+            <label>{lang === 'en' ? 'Request type' : 'نوع الطلب'}</label>
+            <select
+              required
+              value={requestType}
+              onChange={(e) => setRequestType(e.target.value)}
+            >
+              <option value="" disabled>
+                {lang === 'en' ? 'Choose a request type' : 'اختر نوع الطلب'}
+              </option>
+              <option value="demo">{lang === 'en' ? 'Platform demo' : 'عرض توضيحي للمنصة'}</option>
+              <option value="pricing">{lang === 'en' ? 'Pricing & plans' : 'الخطط والأسعار'}</option>
+              <option value="support">{lang === 'en' ? 'Technical support' : 'الدعم الفني والمساعدة'}</option>
+              <option value="partnership">{lang === 'en' ? 'Partnership & business' : 'شراكة وأعمال'}</option>
+              <option value="general">{lang === 'en' ? 'General inquiry' : 'استفسار عام'}</option>
+            </select>
+          </div>
 
-        {submitted && (
-          <p className="form-success">
-            <CheckCircle2 size={16} />
-            {lang === 'en'
-              ? 'Your message has been received! Our team will contact you shortly.'
-              : 'تم استلام رسالتك بنجاح، سيتواصل معك فريقنا قريباً.'}
-          </p>
-        )}
-      </form>
+          <div className="contact-field-group">
+            <label>{lang === 'en' ? 'Message' : 'الرسالة'}</label>
+            <textarea
+              required
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={lang === 'en' ? 'How can we help?' : 'كيف يمكننا مساعدتك؟'}
+              rows={4}
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="contact-submit-button"
+            disabled={submitting}
+          >
+            {submitting ? (
+              <>
+                <LoaderCircle size={17} className="animate-spin" />
+                <span>{lang === 'en' ? 'Sending...' : 'جارٍ الإرسال...'}</span>
+              </>
+            ) : (
+              <>
+                <Send size={16} />
+                <span>{lang === 'en' ? 'Send message' : 'إرسال الرسالة'}</span>
+              </>
+            )}
+          </button>
+        </form>
+      </div>
     </section>
   );
 }

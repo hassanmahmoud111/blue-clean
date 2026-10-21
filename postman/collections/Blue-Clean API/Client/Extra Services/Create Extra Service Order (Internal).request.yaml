@@ -1,0 +1,34 @@
+$kind: http-request
+url: "{{base_url}}/client/extra-services"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "order_source_type": "internal_request",
+        "unit_id": 1,
+        "service_type": "تعقيم شامل",
+        "quantity": 1,
+        "estimated_cost": 200.00,
+        "instructions": "تعقيم شامل للوحدة قبل الموسم",
+        "add_cost_to_booking": false,
+        "send_confirmation_to_guest": false,
+        "require_manager_approval": true,
+        "execution_date": "2026-09-12",
+        "start_time": "09:00 AM",
+        "end_time": "11:00 AM",
+        "priority": "medium",
+        "assignment_method": "auto",
+        "notify_worker": true,
+        "notify_supervisor": true,
+        "notify_guest": false,
+        "internal_notes": "طلب دوري داخلي"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 5000

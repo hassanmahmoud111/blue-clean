@@ -1,0 +1,11 @@
+$kind: http-request
+description: جلب قائمة الوحدات المسندة لعامل محدد في لوحة التحكم.
+url: "{{base_url}}/admin/workers/1/units"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 7000

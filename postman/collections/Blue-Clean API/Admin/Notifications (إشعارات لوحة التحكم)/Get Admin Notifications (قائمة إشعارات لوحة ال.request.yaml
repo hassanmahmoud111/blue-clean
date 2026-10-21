@@ -1,0 +1,16 @@
+$kind: http-request
+name: Get Admin Notifications (قائمة إشعارات لوحة التحكم)
+description: جلب قائمة إشعارات الأدمن مع عدد الإشعارات غير المقروءة.
+url: "{{base_url}}/admin/notifications?unread_only=false"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  - key: unread_only
+    value: "false"
+    description: true لجلب غير المقروء فقط
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 1000

@@ -1,0 +1,30 @@
+$kind: http-request
+description: إنشاء طلب نظافة جديد بواسطة الأدمن وتعيينه لعميل محدد مع إمكانية إسناده لمقدم خدمة
+url: "{{base_url}}/admin/cleaning-orders"
+method: POST
+headers:
+  Accept: application/json
+  Authorization: Bearer {{admin_token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "client_id": 2,
+        "unit_id": 1,
+        "service_type": "deep_cleaning",
+        "execution_date": "2026-10-05",
+        "start_time": "10:00",
+        "end_time": "13:00",
+        "priority": "high",
+        "worker_id": 1,
+        "instructions": "تنظيف شامل للوحدة وتعقيمها بالكامل قبل استلام الضيف الجديد",
+        "execution_scope": [
+            "living_room",
+            "bedroom",
+            "kitchen",
+            "bathrooms"
+        ],
+        "attachments": []
+    }
+order: 8000

@@ -23,6 +23,7 @@ import type {
   CalendarData,
   CalendarUnit,
 } from '../types/clientBooking';
+import PublicLoadingScreen from '../components/PublicLoadingScreen';
 import './bookings-page.css';
 import './bookings-list-view.css';
 
@@ -163,26 +164,42 @@ export default function BookingsPage() {
   const [bookingsList, setBookingsList] = useState<BookingItem[]>([]);
   const [calendarData, setCalendarData] = useState<CalendarData | null>(null);
   const [loadingList, setLoadingList] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   // Fetch stats & full bookings list on mount
   useEffect(() => {
     let active = true;
-
-    fetchBookingStats().then((res) => {
-      if (active && res && typeof res.total_bookings === 'number') {
-        setBookingStats(res);
-      }
-    });
-
     setLoadingList(true);
-    fetchBookings()
-      .then((res) => {
+
+    Promise.all([
+      fetchBookingStats().then((res) => {
+        if (active && res && typeof res.total_bookings === 'number') {
+          setBookingStats(res);
+        }
+      }),
+      fetchBookings().then((res) => {
         if (active && Array.isArray(res.data)) {
           setBookingsList(res.data);
         }
+      }),
+      fetchBookingCalendar({
+        view_mode: calendarMode,
+        date: baseDateIso,
+        unit_id: selectedUnit !== 'all' ? selectedUnit : undefined,
+      }).then((res) => {
+        if (active && res) {
+          setCalendarData(res);
+        }
+      }),
+    ])
+      .catch((err) => {
+        console.warn('API error in BookingsPage:', err);
       })
       .finally(() => {
-        if (active) setLoadingList(false);
+        if (active) {
+          setLoading(false);
+          setLoadingList(false);
+        }
       });
 
     return () => {
@@ -305,6 +322,10 @@ export default function BookingsPage() {
   const upcomingBookings = useMemo(() => {
     return calendarData?.upcoming_bookings || [];
   }, [calendarData]);
+
+  if (loading) {
+    return <PublicLoadingScreen />;
+  }
 
   return (
     <div className="bookings-page-container">

@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{base_url}}/global/locations/areas?city_id=1"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  city_id: "1"
+auth:
+  type: noauth
+order: 3000

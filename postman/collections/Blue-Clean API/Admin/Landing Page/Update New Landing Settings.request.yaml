@@ -1,0 +1,26 @@
+$kind: http-request
+url: "{{base_url}}/admin/landing-page/new-settings"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "settings": {
+            "hero_section": {
+                "title": "Blue Clean Best Services",
+                "subtitle": "Professional cleaning solutions",
+                "image": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+            },
+            "about_us": {
+                "description": "About company text"
+            }
+        }
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 2000

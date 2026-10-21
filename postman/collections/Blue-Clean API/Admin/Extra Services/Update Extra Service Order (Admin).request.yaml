@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/admin/extra-services/1"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "priority": "urgent",
+        "instructions": "تعليمات محدثة بواسطة الإدارة"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 6000

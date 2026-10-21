@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{base_url}}/admin/inventory/transfer-to-worker"
+method: POST
+headers:
+  Authorization: Bearer {{admin_token}}
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: text
+  content: |-
+    {
+        "worker_id": 1,
+        "inventory_item_id": 1,
+        "quantity": 10,
+        "notes": "صرف عهدة أسبوعية"
+    }
+order: 4000

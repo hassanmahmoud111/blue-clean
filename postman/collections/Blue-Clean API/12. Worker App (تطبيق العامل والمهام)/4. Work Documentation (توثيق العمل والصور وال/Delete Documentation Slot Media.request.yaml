@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{base_url}}/worker/tasks/cleaning/1/documentation"
+method: DELETE
+headers:
+  Authorization: Bearer {{worker_token}}
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: text
+  content: |-
+    {
+        "slot_key": "bathroom"
+    }
+order: 3000

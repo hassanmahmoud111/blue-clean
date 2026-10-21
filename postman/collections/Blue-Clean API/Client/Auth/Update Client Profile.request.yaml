@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/client/auth/profile"
+method: PUT
+headers:
+  Accept: application/json
+  Authorization: Bearer {{client_token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name": "عبدالله الشمري المحدث",
+        "facility_name": "مؤسسة السكن الحديث",
+        "email": "client@blueclean.com",
+        "phone": "+966551234567",
+        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400"
+    }
+order: 8000

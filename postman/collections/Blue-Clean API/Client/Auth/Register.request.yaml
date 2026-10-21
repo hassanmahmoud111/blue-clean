@@ -1,0 +1,28 @@
+$kind: http-request
+url: "{{base_url}}/client/auth/register"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name": "محمد القحطاني",
+        "facility_name": "مؤسسة السكن المميز",
+        "email": "client@example.com",
+        "phone": "+966501234567",
+        "password": "123456",
+        "password_confirmation": "123456"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      var jsonData = pm.response.json();
+      if (jsonData.success && jsonData.data && jsonData.data.token) {
+          pm.collectionVariables.set('token', jsonData.data.token);
+      }
+    language: text/javascript
+order: 1000

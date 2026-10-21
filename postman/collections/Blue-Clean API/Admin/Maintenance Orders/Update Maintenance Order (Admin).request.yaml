@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/admin/maintenance-orders/1"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "priority": "urgent",
+        "description": "وصف المشكلة المحدث بواسطة الإدارة"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 6000

@@ -23,8 +23,14 @@ export function PublicHeader() {
           <button className="language-button" type="button" onClick={toggleLang} title={lang === 'ar' ? 'Switch to English' : 'التحويل للعربية'}>
             <Globe2 size={16}/>{lang === 'ar' ? 'العربية' : 'English'}<span>⌄</span>
           </button>
-          <Link className="login-button" to="/login"><LogIn size={15}/>{lang === 'en' ? 'Sign In' : 'تسجيل الدخول'}</Link>
-          <Link className="start-button" to="/register"><Rocket size={15}/>{lang === 'en' ? 'Get Started' : 'ابدأ الآن'}</Link>
+          <Link className="login-button" to="/login">
+            {lang === 'en' && <LogIn size={15} />}
+            {lang === 'en' ? 'Sign in' : 'تسجيل الدخول'}
+          </Link>
+          <Link className="start-button" to="/register">
+            {lang === 'ar' && <Rocket size={15} />}
+            {lang === 'en' ? 'Get started' : 'ابدأ الآن'}
+          </Link>
         </div>
         <button className="reference-menu-button" type="button" onClick={() => setMenuOpen(true)} aria-label="فتح القائمة"><Menu size={22}/></button>
       </div>

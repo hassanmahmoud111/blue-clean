@@ -1,0 +1,35 @@
+$kind: http-request
+url: "{{base_url}}/admin/units"
+method: POST
+headers:
+  Accept: application/json
+  Authorization: Bearer {{admin_token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "user_id": 1,
+        "addition_type": "manual",
+        "name": "شقة 501 فاخرة",
+        "property_name": "برج النرجس",
+        "unit_type": "شقة",
+        "city_id": 1,
+        "area_id": 1,
+        "detailed_address": "حي النرجس، شارع الملك سلمان",
+        "guests_count": 4,
+        "bedrooms_count": 2,
+        "beds_count": 2,
+        "bathrooms_count": 2,
+        "management_mode": "blue_clean",
+        "check_in_time": "03:00 PM",
+        "check_out_time": "11:00 AM",
+        "cleaning_duration": "2 hours",
+        "default_team": "فريق أ",
+        "entry_method": "smart_lock",
+        "status": "active",
+        "auto_clean_on_checkout": true,
+        "alert_before_guest_arrival": false,
+        "description": "شقة فندقية مميزة مطلة على الحديقة"
+    }
+order: 4000

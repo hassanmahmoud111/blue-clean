@@ -1,0 +1,28 @@
+$kind: http-request
+url: "{{base_url}}/admin/guest-orders?search=&unit_id=&status=&payment_status=&date=&per_page=15"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  - key: search
+    value: ""
+    description: بحث برقم الطلب أو اسم الضيف أو الهاتف
+  - key: unit_id
+    value: ""
+    description: معرف الشقة
+  - key: status
+    value: ""
+    description: pending, preparing, on_the_way, delivered, cancelled
+  - key: payment_status
+    value: ""
+    description: pending, paid, failed
+  - key: date
+    value: ""
+    description: تاريخ الطلب YYYY-MM-DD
+  - key: per_page
+    value: "15"
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 2000

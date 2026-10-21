@@ -1,0 +1,11 @@
+$kind: http-request
+description: حذف إشعار محدد من قائمة إشعارات لوحة التحكم.
+url: "{{base_url}}/admin/notifications/1"
+method: DELETE
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 4000

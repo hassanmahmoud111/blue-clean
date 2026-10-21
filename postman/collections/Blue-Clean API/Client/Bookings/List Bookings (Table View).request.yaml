@@ -1,0 +1,29 @@
+$kind: http-request
+url: "{{base_url}}/client/bookings?date=2026-10-02&status=confirmed&booking_source=booking"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  - key: date
+    value: 2026-10-02
+    description: فلتر شريط الأيام - يرجع أي حجز يغطي هذا اليوم
+  - key: status
+    value: confirmed
+    description: confirmed, pending, checked_in, completed, cancelled
+  - key: booking_source
+    value: booking
+    description: direct, airbnb, booking, gathern
+  - key: payment_status
+    value: paid
+    disabled: true
+  - key: unit_id
+    value: "1"
+    disabled: true
+  - key: search
+    value: عبدالله
+    disabled: true
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 3000

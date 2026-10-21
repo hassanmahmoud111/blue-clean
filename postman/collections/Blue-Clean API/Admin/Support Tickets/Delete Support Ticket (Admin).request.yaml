@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{base_url}}/admin/support-tickets/SUP-1048"
+method: DELETE
+headers:
+  Accept: application/json
+  Authorization: Bearer {{admin_token}}
+order: 5000

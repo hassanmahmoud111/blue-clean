@@ -1,0 +1,7 @@
+$kind: http-request
+name: Worker Support Contact (التواصل مع المشرف قبل الدخول)
+url: "{{base_url}}/worker/support-contact"
+method: GET
+headers:
+  Accept: application/json
+order: 3000

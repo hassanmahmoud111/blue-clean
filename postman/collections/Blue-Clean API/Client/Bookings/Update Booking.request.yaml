@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{base_url}}/client/bookings/1"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "guest_name": "عبدالله محمد المحدث",
+        "payment_status": "مدفوع",
+        "total_amount": 1860.00
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 7000

@@ -1,0 +1,44 @@
+$kind: http-request
+url: "{{base_url}}/admin/packages"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name_ar": "باقة مخصصة",
+        "name_en": "Custom Plan",
+        "slug": "custom-plan",
+        "description_ar": "وصف الباقة المخصصة بالعربي",
+        "description_en": "Custom plan description in English",
+        "price": 299,
+        "price_text_ar": "299 ر.س / شهرياً",
+        "price_text_en": "299 SAR / Month",
+        "billing_period": "monthly",
+        "max_units": 15,
+        "is_unlimited_units": false,
+        "is_popular": false,
+        "badge_ar": null,
+        "badge_en": null,
+        "button_text_ar": "ابدأ الآن",
+        "button_text_en": "Get Started",
+        "features_ar": [
+            "إدارة العمليات",
+            "تقارير مخصصة",
+            "دعم متواصل"
+        ],
+        "features_en": [
+            "Operations Management",
+            "Custom Reports",
+            "24/7 Support"
+        ],
+        "is_active": true,
+        "sort_order": 4
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 2000

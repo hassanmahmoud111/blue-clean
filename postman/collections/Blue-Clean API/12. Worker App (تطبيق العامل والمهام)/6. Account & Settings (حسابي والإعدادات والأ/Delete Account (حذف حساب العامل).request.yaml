@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/worker/account"
+method: DELETE
+headers:
+  Authorization: Bearer {{worker_token}}
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: text
+  content: |-
+    {
+        "password": "password123",
+        "reason": "Leaving employment"
+    }
+order: 5000

@@ -1,0 +1,6 @@
+$kind: http-request
+url: "{{base_url}}/guest/orders/GST-VJHZW2"
+method: GET
+headers:
+  Accept: application/json
+order: 3000

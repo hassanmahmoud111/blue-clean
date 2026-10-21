@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{base_url}}/client/support-tickets"
+method: GET
+headers:
+  Accept: application/json
+  Authorization: Bearer {{client_token}}
+queryParams:
+  - key: status
+    value: all
+    disabled: true
+  - key: priority
+    value: all
+    disabled: true
+  - key: search
+    value: ""
+    disabled: true
+order: 1000

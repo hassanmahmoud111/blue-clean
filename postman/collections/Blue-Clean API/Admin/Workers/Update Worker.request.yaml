@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{base_url}}/admin/workers/1"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name": "محمد أحمد عثمان المعدل",
+        "phone": "+966500000001",
+        "status": "busy"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 4000

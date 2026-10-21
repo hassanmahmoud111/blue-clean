@@ -1,0 +1,12 @@
+$kind: http-request
+name: Mark All Notifications as Read (تحديد الكل كمقروء)
+description: تحديد جميع إشعارات العميل كمقروءة وتصفير العداد.
+url: "{{base_url}}/client/notifications/mark-all-read"
+method: POST
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 3000

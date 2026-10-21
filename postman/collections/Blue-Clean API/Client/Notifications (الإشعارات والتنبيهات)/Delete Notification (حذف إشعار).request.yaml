@@ -1,0 +1,11 @@
+$kind: http-request
+description: حذف إشعار محدد من قائمة إشعارات العميل.
+url: "{{base_url}}/client/notifications/1"
+method: DELETE
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 4000

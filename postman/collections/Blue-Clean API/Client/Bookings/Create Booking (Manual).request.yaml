@@ -1,0 +1,33 @@
+$kind: http-request
+url: "{{base_url}}/client/bookings"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "unit_id": 1,
+        "booking_type": "direct",
+        "booking_source": "حجز مباشر: هاتف، واتساب أو موقع",
+        "guest_name": "عبدالله محمد",
+        "guest_phone": "+966501234567",
+        "guest_email": "guest@example.com",
+        "adults_count": 2,
+        "check_in_date": "2026-09-10",
+        "check_in_time": "03:00 PM",
+        "check_out_date": "2026-09-13",
+        "check_out_time": "11:00 AM",
+        "total_amount": 1860.00,
+        "payment_status": "غير مدفوع",
+        "block_calendar_dates": true,
+        "send_welcome_message": true,
+        "auto_clean_on_checkout": true,
+        "notes": "ملاحظات الدفع أو تعليمات الوصول"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 5000

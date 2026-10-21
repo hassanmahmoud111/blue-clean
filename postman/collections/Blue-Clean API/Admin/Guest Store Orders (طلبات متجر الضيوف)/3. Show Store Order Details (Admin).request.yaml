@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{base_url}}/admin/guest-orders/1"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 3000

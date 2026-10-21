@@ -37,6 +37,7 @@ import {
   upgradePlan,
 } from '../services/clientBillingService';
 import { useLanguage } from '../context/LanguageContext';
+import PublicLoadingScreen from '../components/PublicLoadingScreen';
 import './billing-page.css';
 
 export default function BillingPage() {
@@ -44,6 +45,7 @@ export default function BillingPage() {
   const [overview, setOverview] = useState<BillingOverview | null>(null);
   const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
 
   // Tabs
   const [activeTab, setActiveTab] = useState<'invoices' | 'payments' | 'plan' | 'units'>('invoices');
@@ -94,10 +96,18 @@ export default function BillingPage() {
   };
 
   useEffect(() => {
+    let active = true;
     async function init() {
-      await Promise.all([loadOverview(), loadInvoices(1)]);
+      try {
+        await Promise.all([loadOverview(), loadInvoices(1)]);
+      } finally {
+        if (active) setPageLoading(false);
+      }
     }
     init();
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -153,6 +163,10 @@ export default function BillingPage() {
   const subDetails = overview?.subscription_details;
   const upgradeBanner = overview?.upgrade_banner;
   const paymentMethods = overview?.payment_methods || [];
+
+  if (pageLoading) {
+    return <PublicLoadingScreen />;
+  }
 
   return (
     <div className="billing-page-container">

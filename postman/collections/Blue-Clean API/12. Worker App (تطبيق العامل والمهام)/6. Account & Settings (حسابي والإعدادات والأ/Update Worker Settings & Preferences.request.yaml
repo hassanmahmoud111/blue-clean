@@ -1,0 +1,16 @@
+$kind: http-request
+url: "{{base_url}}/worker/settings"
+method: PUT
+headers:
+  Authorization: Bearer {{worker_token}}
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: text
+  content: |-
+    {
+        "language": "ar",
+        "theme": "dark",
+        "notifications_enabled": true
+    }
+order: 4000

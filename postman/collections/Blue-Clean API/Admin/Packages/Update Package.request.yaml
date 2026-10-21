@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{base_url}}/admin/packages/1"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "name_ar": "الأساسية المحدثة",
+        "name_en": "Basic Updated",
+        "price": 219,
+        "max_units": 7
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 4000

@@ -1,0 +1,18 @@
+$kind: http-request
+name: Report Issue (الإبلاغ عن مشكلة أثناء التنفيذ)
+url: "{{base_url}}/worker/tasks/cleaning/1/report-issue"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "issue_description": "يوجد تسريب مياه في صنبور المغسلة يحتاج إلى فني صيانة."
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 8000

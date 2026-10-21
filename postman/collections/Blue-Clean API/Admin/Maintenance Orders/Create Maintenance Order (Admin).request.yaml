@@ -1,0 +1,25 @@
+$kind: http-request
+description: إنشاء طلب صيانة جديد بواسطة الأدمن وتعيينه لعميل محدد وفني صيانة
+url: "{{base_url}}/admin/maintenance-orders"
+method: POST
+headers:
+  Accept: application/json
+  Authorization: Bearer {{admin_token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "client_id": 2,
+        "unit_id": 1,
+        "issue_category": "plumbing",
+        "description": "تسريب مياه في صنبور الحمام الرئيسي بحاجة لإصلاح فوري",
+        "execution_date": "2026-10-05",
+        "start_time": "11:00",
+        "end_time": "12:30",
+        "priority": "urgent",
+        "worker_id": 1,
+        "estimated_cost": 150,
+        "attachments": []
+    }
+order: 8000

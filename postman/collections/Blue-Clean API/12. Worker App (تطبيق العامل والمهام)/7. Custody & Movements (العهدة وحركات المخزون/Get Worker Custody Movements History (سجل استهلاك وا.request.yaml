@@ -1,0 +1,8 @@
+$kind: http-request
+name: Get Worker Custody Movements History (سجل استهلاك واستلام العهدة)
+url: "{{base_url}}/worker/custody/movements"
+method: GET
+headers:
+  Authorization: Bearer {{worker_token}}
+  Accept: application/json
+order: 2000

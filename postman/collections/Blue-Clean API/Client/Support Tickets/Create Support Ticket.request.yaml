@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{base_url}}/client/support-tickets"
+method: POST
+headers:
+  Accept: application/json
+  Authorization: Bearer {{client_token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "subject": "تأخر مزامنة حجز من Booking.com",
+        "category": "integration_sync",
+        "priority": "urgent",
+        "message": "الحجز ظاهر في Booking.com لكنه لم يظهر داخل المنصة حتى الآن",
+        "unit_id": 1,
+        "booking_id": 1,
+        "attachments": []
+    }
+order: 2000

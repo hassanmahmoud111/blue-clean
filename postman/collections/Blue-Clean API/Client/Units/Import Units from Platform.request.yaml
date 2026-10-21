@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{base_url}}/client/units/import"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "platform": "airbnb",
+        "listing_ids": [
+            "airbnb_101",
+            "airbnb_102"
+        ]
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{client_token}}"
+order: 7000

@@ -1,0 +1,37 @@
+$kind: http-request
+name: Save Used Materials (حفظ المواد المستخدمة وخصم المخزون)
+url: "{{base_url}}/worker/tasks/cleaning/1/materials"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "used_materials": [
+            {
+                "item_id": 1,
+                "name": "منظف متعدد الاستخدام",
+                "unit": "عبوة 750 مل",
+                "quantity": 2
+            },
+            {
+                "item_id": 2,
+                "name": "مناديل ورقية",
+                "unit": "رول",
+                "quantity": 1
+            },
+            {
+                "item_id": 3,
+                "name": "صابون ضيافة",
+                "unit": "قطعة صغيرة",
+                "quantity": 4
+            }
+        ]
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 6000

@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{base_url}}/client/account/summary"
+method: GET
+headers:
+  Accept: application/json
+  Accept-Language: ar
+auth:
+  type: bearer
+  credentials:
+    token: "{{client_token}}"
+order: 1000

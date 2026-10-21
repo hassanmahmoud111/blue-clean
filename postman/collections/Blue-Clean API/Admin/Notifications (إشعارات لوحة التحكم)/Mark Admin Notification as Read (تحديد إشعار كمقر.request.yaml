@@ -1,0 +1,12 @@
+$kind: http-request
+name: Mark Admin Notification as Read (تحديد إشعار كمقروء)
+description: تحديد إشعار محدد كمقروء في لوحة التحكم.
+url: "{{base_url}}/admin/notifications/1/read"
+method: POST
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 2000

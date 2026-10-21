@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{base_url}}/admin/units/1"
+method: PUT
+headers:
+  Accept: application/json
+  Authorization: Bearer {{admin_token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "user_id": 1,
+        "name": "شقة 501 فاخرة (محدثة)",
+        "guests_count": 5,
+        "status": "active"
+    }
+order: 5000

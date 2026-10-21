@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{base_url}}/admin/guest-orders/1/assign-worker"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "worker_id": 2
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 5000

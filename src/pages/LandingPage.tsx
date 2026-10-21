@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -6,143 +6,148 @@ import {
   BarChart3,
   CalendarDays,
   Check,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   CirclePlay,
   Headphones,
   Home,
+  MessageSquareText,
+  RefreshCw,
+  ShieldCheck,
   Sparkles,
+  UsersRound,
   Wrench,
   X,
 } from 'lucide-react';
 import { PublicFooter, PublicHeader } from '../components/PublicChrome';
+import { PublicLoadingScreen } from '../components/PublicLoadingScreen';
 import { useLanguage } from '../context/LanguageContext';
+import {
+  fetchGlobalNewSettings,
+  fetchGlobalPackages,
+  formatPackageBadge,
+  formatPackagePrice,
+  formatPackageUnits,
+  getPackageButtonText,
+  getPackageFeatures,
+  resolveLocalized,
+  type ApiPackageItem,
+  type GlobalNewSettingsData,
+} from '../services/landingService';
 import './landing-reference.css';
 
-interface FeatureItem {
-  icon: typeof Home;
-  title: string;
-  titleEn: string;
-  text: string;
-  textEn: string;
+function getFeatureIcon(name?: string) {
+  if (!name) return Sparkles;
+  const n = name.toLowerCase();
+  if (n.includes('house') || n.includes('home')) return Home;
+  if (n.includes('calendar')) return CalendarDays;
+  if (n.includes('sparkle') || n.includes('spray') || n.includes('clean')) return Sparkles;
+  if (n.includes('wrench') || n.includes('tool') || n.includes('screwdriver')) return Wrench;
+  if (n.includes('headset') || n.includes('phone') || n.includes('support')) return Headphones;
+  if (n.includes('chart') || n.includes('bar') || n.includes('report') || n.includes('column')) return BarChart3;
+  if (n.includes('shield') || n.includes('lock') || n.includes('security')) return ShieldCheck;
+  if (n.includes('sync') || n.includes('refresh')) return RefreshCw;
+  if (n.includes('message') || n.includes('chat')) return MessageSquareText;
+  if (n.includes('user') || n.includes('team')) return UsersRound;
+  return Sparkles;
 }
 
-const features: FeatureItem[] = [
+const defaultFeatures = [
   {
     icon: Home,
     title: 'إدارة الوحدات',
-    titleEn: 'Unit Management',
+    titleEn: 'Unit management',
     text: 'إدارة جميع عقاراتك ووحداتك من مكان واحد',
-    textEn: 'Manage all your properties and units in one place',
+    textEn: 'Manage all your properties and units from one place',
   },
   {
     icon: CalendarDays,
     title: 'تقويم موحد',
-    titleEn: 'Unified Calendar',
+    titleEn: 'Unified calendar',
     text: 'عرض جميع الحجوزات في تقويم واحد',
-    textEn: 'View all bookings across platforms in one calendar',
+    textEn: 'See every booking in a single calendar',
   },
   {
     icon: Sparkles,
     title: 'إدارة التنظيف',
-    titleEn: 'Cleaning Management',
+    titleEn: 'Cleaning management',
     text: 'طلبات تنظيف تلقائية وتتبع التنفيذ بالصور',
-    textEn: 'Automated cleaning orders with photo verification',
+    textEn: 'Automatic cleaning requests with photo-tracked completion',
   },
   {
     icon: Wrench,
     title: 'صيانة وخدمات إضافية',
-    titleEn: 'Maintenance & Services',
+    titleEn: 'Maintenance & extra services',
     text: 'إدارة طلبات الصيانة والخدمات بسهولة ومرونة',
-    textEn: 'Effortlessly manage maintenance orders and add-ons',
+    textEn: 'Handle maintenance and service requests easily and flexibly',
   },
   {
     icon: Headphones,
     title: 'محادثات موحدة',
-    titleEn: 'Unified Inbox',
+    titleEn: 'Unified conversations',
     text: 'كل رسائل الضيوف من جميع المنصات في صندوق واحد',
-    textEn: 'All guest messages from every channel in one inbox',
+    textEn: 'Every guest message from every platform in one inbox',
   },
   {
     icon: BarChart3,
     title: 'تقارير وتحليلات',
-    titleEn: 'Reports & Analytics',
+    titleEn: 'Reports & analytics',
     text: 'تابع الأداء والإشغال والتكاليف بشكل مبسط وواضح',
-    textEn: 'Track performance, occupancy, and costs clearly',
+    textEn: 'Track performance, occupancy and costs simply and clearly',
   },
 ];
 
-interface PricingPlan {
-  id: string;
-  name: string;
-  nameEn: string;
-  subtitle: string;
-  subtitleEn: string;
-  price: string;
-  priceEn: string;
-  badge?: string;
-  badgeEn?: string;
-  units: string;
-  unitsEn: string;
-  features: { ar: string; en: string }[];
-  isHighlighted?: boolean;
-}
-
-const pricingPlans: PricingPlan[] = [
+const fallbackPricingPlans = [
   {
     id: 'basic',
     name: 'الأساسية',
-    nameEn: 'Basic',
     subtitle: 'للمضيف الفردي والوحدات القليلة',
-    subtitleEn: 'For individual hosts and small properties',
     price: '199 ر.س / شهرياً',
-    priceEn: '199 SAR / month',
+    badge: null as string | null,
     units: 'حتى 5 وحدات',
-    unitsEn: 'Up to 5 units',
     features: [
-      { ar: 'إدارة الوحدات والحجوزات', en: 'Units & Bookings Management' },
-      { ar: 'تقويم موحد', en: 'Unified Calendar' },
-      { ar: 'طلبات تشغيل يدوية', en: 'Manual Operation Orders' },
-      { ar: 'تقارير أساسية', en: 'Basic Reports' },
+      'إدارة الوحدات والحجوزات',
+      'تقويم موحد',
+      'طلبات تشغيل يدوية',
+      'تقارير أساسية',
     ],
+    buttonText: 'ابدأ الآن',
+    isHighlighted: false,
+    isCustomPrice: false,
   },
   {
     id: 'pro',
     name: 'الاحترافية',
-    nameEn: 'Professional',
     subtitle: 'للمنشآت والشركات المتوسطة',
-    subtitleEn: 'For growing hosts and property firms',
-    price: '12500 ر.س / شهرياً',
-    priceEn: '12,500 SAR / month',
-    badge: 'مهم جداً',
-    badgeEn: 'Most Popular',
-    isHighlighted: true,
-    units: 'حتى 14 وحدات',
-    unitsEn: 'Up to 14 units',
+    price: '599 ر.س / شهرياً',
+    badge: 'الأكثر اختيارًا',
+    units: 'حتى 50 وحدة',
     features: [
-      { ar: 'جميع مميزات الباقة الأساسية', en: 'All Basic Plan features' },
-      { ar: 'ربط منصات الحجز تلقائياً', en: 'Automatic channel sync' },
-      { ar: 'تشغيل تلقائي بعد المغادرة', en: 'Auto cleaning on checkout' },
-      { ar: 'تقارير متقدمة ودعم أولوية', en: 'Advanced reports & priority support' },
+      'جميع مميزات الباقة الأساسية',
+      'ربط منصات الحجز تلقائياً',
+      'تشغيل تلقائي بعد المغادرة',
+      'تقارير متقدمة ودعم أولوية',
     ],
+    buttonText: 'ابدأ الآن',
+    isHighlighted: true,
+    isCustomPrice: false,
   },
   {
     id: 'enterprise',
     name: 'الأعمال',
-    nameEn: 'Enterprise',
     subtitle: 'للشركات والمحافظ الكبيرة',
-    subtitleEn: 'For large portfolios and enterprises',
-    price: '1 ر.س / شهرياً',
-    priceEn: 'Custom / month',
+    price: 'تواصل معنا',
+    badge: null as string | null,
     units: 'وحدات غير محدودة',
-    unitsEn: 'Unlimited units',
     features: [
-      { ar: 'إعداد مخصص للمنشأة', en: 'Custom organizational setup' },
-      { ar: 'صلاحيات فرق متقدمة', en: 'Advanced team permissions' },
-      { ar: 'تكاملات وتقارير مخصصة', en: 'Custom integrations & reports' },
-      { ar: 'مدير نجاح مخصص', en: 'Dedicated account manager' },
+      'إعداد مخصص للمنشأة',
+      'صلاحيات فرق متقدمة',
+      'تكاملات وتقارير مخصصة',
+      'مدير نجاح مخصص',
     ],
+    buttonText: 'اطلب عرضًا',
+    isHighlighted: false,
+    isCustomPrice: true,
   },
 ];
 
@@ -183,63 +188,192 @@ export default function LandingPage() {
   const { lang, isRTL } = useLanguage();
   const [showVideoModal, setShowVideoModal] = useState(false);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
-  const [pricingDot, setPricingDot] = useState(3);
+  const [pricingDot, setPricingDot] = useState(0);
+
+  const [settings, setSettings] = useState<GlobalNewSettingsData | null>(null);
+  const [packages, setPackages] = useState<ApiPackageItem[] | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([fetchGlobalNewSettings(), fetchGlobalPackages()])
+      .then(([s, p]) => {
+        if (!mounted) return;
+        if (s) setSettings(s);
+        if (p && p.length > 0) setPackages(p);
+      })
+      .catch(err => {
+        console.warn('API fetch error on LandingPage:', err);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const seoTitle = resolveLocalized(settings?.seo_section?.title, lang);
+    if (seoTitle) {
+      document.title = seoTitle;
+    }
+  }, [settings, lang]);
 
   const activeTestimonial = testimonials[testimonialIdx];
+
+  // Dynamic hero texts
+  const heroEyebrow =
+    resolveLocalized(settings?.hero_section?.eyebrow, lang) ||
+    (lang === 'en'
+      ? 'The all-in-one platform to manage and operate residential units'
+      : 'المنصة المتكاملة لإدارة وتشغيل الوحدات السكنية');
+
+  const heroTitle =
+    lang === 'ar'
+      ? (settings?.hero_section?.title_ar ||
+         resolveLocalized(settings?.landing?.hero?.title || settings?.hero_section?.title, 'ar') ||
+         'إدارة وحداتك أسهل\nوتشغيلها أكثر احترافية')
+      : (settings?.hero_section?.title_en ||
+         resolveLocalized(settings?.landing?.hero?.title || settings?.hero_section?.title, 'en') ||
+         'Easier unit management,\nmore professional operations');
+
+  const heroDesc =
+    lang === 'ar'
+      ? (settings?.hero_section?.subtitle_ar ||
+         resolveLocalized(settings?.landing?.hero?.description || settings?.hero_section?.description, 'ar') ||
+         'BluClean يساعدك على إدارة حجوزاتك من جميع المنصات، وتنظيم أعمال التنظيف والصيانة والتواصل مع الضيوف في مكان واحد.')
+      : (settings?.hero_section?.subtitle_en ||
+         resolveLocalized(settings?.landing?.hero?.description || settings?.hero_section?.description, 'en') ||
+         'BluClean helps you manage bookings from every platform and organize cleaning, maintenance and guest communication in one place.');
+
+  const heroCtaLabel = lang === 'en' ? 'Get started' : 'ابدأ الآن';
+  const heroCtaHref = settings?.hero_section?.primaryCta?.href || '/register';
+
+  const heroBenefits =
+    lang === 'ar'
+      ? ['دعم باللغة العربية', 'إعداد سريع', 'بدون تعقيد']
+      : ['No complexity', 'Quick setup', 'Arabic-language support'];
+
+  const heroImage =
+    settings?.hero_section?.image ||
+    settings?.landing?.hero?.image ||
+    '/bluclean-home-reference.png';
+
+  const heroImageAlt =
+    lang === 'en'
+      ? 'The BluClean dashboard on a laptop and phone inside a residential unit'
+      : 'لوحة BluClean على الحاسوب والهاتف داخل وحدة سكنية';
+
+  // Dynamic platforms
+  const platformsTitle =
+    lang === 'ar'
+      ? (resolveLocalized(settings?.platforms_section?.title, 'ar') || 'تتكامل مع أهم منصات الحجز')
+      : (resolveLocalized(settings?.platforms_section?.title, 'en') || 'Integrates with the leading booking platforms');
+
+  const platformsSubtitle =
+    lang === 'ar'
+      ? (resolveLocalized(settings?.platforms_section?.subtitle, 'ar') || 'اجمع كل حجوزاتك في مكان واحد')
+      : (resolveLocalized(settings?.platforms_section?.subtitle, 'en') || 'Bring all your bookings into one place');
+
+  // Dynamic features
+  const displayFeatures =
+    settings?.features_section?.items && settings.features_section.items.length > 0
+      ? settings.features_section.items.map(item => ({
+          icon: getFeatureIcon(item.icon),
+          title: resolveLocalized(item.title, lang),
+          text: resolveLocalized(item.text, lang),
+        }))
+      : defaultFeatures.map(item => ({
+          icon: item.icon,
+          title: lang === 'en' ? item.titleEn : item.title,
+          text: lang === 'en' ? item.textEn : item.text,
+        }));
+
+  // Dynamic proof & stats
+  const proofStats =
+    settings?.testimonial_section?.stats && settings.testimonial_section.stats.length > 0
+      ? settings.testimonial_section.stats.map(s => ({
+          id: s.id,
+          value: s.value,
+          label: resolveLocalized(s.label, lang),
+        }))
+      : [
+          { id: '1', value: '+99%', label: lang === 'en' ? 'Customer Satisfaction' : 'معدل رضا العملاء' },
+          { id: '2', value: '+50,000', label: lang === 'en' ? 'Happy Guests' : 'ضيف سعيد' },
+          { id: '3', value: '+10,000', label: lang === 'en' ? 'Completed Cleanings' : 'مهمة تنظيف مكتملة' },
+          { id: '4', value: '+500', label: lang === 'en' ? 'Trusted Hosts' : 'مضيف يثق بنا' },
+        ];
+
+  const proofQuote =
+    resolveLocalized(settings?.testimonial_section?.quote, lang) ||
+    (lang === 'en' ? activeTestimonial.quoteEn : activeTestimonial.quote);
+
+  const proofAuthor =
+    resolveLocalized(settings?.testimonial_section?.author, lang) ||
+    (lang === 'en' ? activeTestimonial.authorEn : activeTestimonial.author);
+
+  // Dynamic packages
+  const displayPlans =
+    packages && packages.length > 0
+      ? packages.map(pkg => ({
+          id: String(pkg.id),
+          name: (lang === 'en' ? pkg.name_en : pkg.name_ar) || pkg.name,
+          subtitle: (lang === 'en' ? pkg.description_en : pkg.description_ar) || pkg.description || '',
+          price: formatPackagePrice(pkg, lang),
+          badge: formatPackageBadge(pkg, lang),
+          units: formatPackageUnits(pkg, lang),
+          features: getPackageFeatures(pkg, lang),
+          buttonText: getPackageButtonText(pkg, lang),
+          isHighlighted: !!pkg.is_popular,
+          isCustomPrice: pkg.price === null,
+        }))
+      : fallbackPricingPlans;
+
+  const totalPages = Math.max(1, displayPlans.length);
+  const activeDot = Math.min(pricingDot, totalPages - 1);
+
+  if (loading) {
+    return <PublicLoadingScreen />;
+  }
 
   return (
     <div className="reference-landing" dir={isRTL ? 'rtl' : 'ltr'}>
       <PublicHeader />
 
       <main id="top">
-        {/* HERO SECTION - Centered per screenshot media_1791383493058.png */}
-        <section className="reference-hero-centered">
-          <div className="reference-hero-container">
-            <div className="reference-eyebrow-pill">
-              {lang === 'en'
-                ? 'The Integrated Platform for Residential Unit Management & Operations'
-                : 'المنصة المتكاملة لإدارة وتشغيل الوحدات السكنية'}
-            </div>
+        {/* HERO SECTION - Split 2-Column Layout Matching Screenshots */}
+        <section className="reference-hero">
+          <div className="reference-hero-copy">
+            <span className="reference-eyebrow">{heroEyebrow}</span>
 
-            <h1 className="reference-hero-title">
-              Easier unit management,
-              <br />
-              more professional operations
+            <h1 style={{ whiteSpace: 'pre-line' }}>
+              {heroTitle}
             </h1>
 
-            <p className="reference-hero-desc">
-              BluClean helps you manage bookings from every platform and organize cleaning, maintenance and guest communication in one place.
+            <p style={{ whiteSpace: 'pre-line' }}>
+              {heroDesc}
             </p>
 
-            <div className="reference-hero-cta-row">
-              <Link className="reference-btn-primary" to="/register">
-                <span>{lang === 'en' ? 'Get Started' : 'ابدأ الآن'}</span>
+            <div className="reference-hero-buttons">
+              <Link className="reference-primary-cta" to={heroCtaHref}>
+                <span>{heroCtaLabel}</span>
                 {isRTL ? <ArrowLeft size={16} /> : <ArrowRight size={16} />}
               </Link>
-              <button
-                className="reference-btn-video"
-                type="button"
-                onClick={() => setShowVideoModal(true)}
-              >
-                <CirclePlay size={18} />
-                <span>{lang === 'en' ? 'Watch Video' : 'شاهد الفيديو'}</span>
-              </button>
             </div>
 
-            <div className="reference-trust-list">
-              <span className="trust-item">
-                <i className="trust-icon"><Check size={12} strokeWidth={3} /></i>
-                <span>{lang === 'en' ? 'No Complexity' : 'بدون تعقيد'}</span>
-              </span>
-              <span className="trust-item">
-                <i className="trust-icon"><Check size={12} strokeWidth={3} /></i>
-                <span>{lang === 'en' ? 'Quick Setup' : 'إعداد سريع'}</span>
-              </span>
-              <span className="trust-item">
-                <i className="trust-icon"><Check size={12} strokeWidth={3} /></i>
-                <span>{lang === 'en' ? 'Arabic & English Support' : 'دعم باللغة العربية'}</span>
-              </span>
+            <div className="reference-benefits">
+              {heroBenefits.map((benefit, bIdx) => (
+                <span key={bIdx}>
+                  <i><Check size={12} strokeWidth={3} /></i>
+                  <span>{benefit}</span>
+                </span>
+              ))}
             </div>
+          </div>
+
+          <div className="reference-hero-visual" aria-label={heroImageAlt}>
+            <img src={heroImage} alt={heroImageAlt} />
           </div>
         </section>
 
@@ -247,8 +381,8 @@ export default function LandingPage() {
         <section id="how" className="reference-platforms-section">
           <div className="reference-platforms-card">
             <div className="platforms-heading">
-              <h2>{lang === 'en' ? 'Integrated with Top Booking Channels' : 'تكامل مع أهم منصات الحجز'}</h2>
-              <p>{lang === 'en' ? 'Consolidate all your bookings in one place' : 'اجمع كل حجوزاتك في مكان واحد'}</p>
+              <h2>{platformsTitle}</h2>
+              <p>{platformsSubtitle}</p>
             </div>
 
             <div className="platforms-divider" />
@@ -277,15 +411,15 @@ export default function LandingPage() {
         {/* 6 FEATURES GRID IN SINGLE ROW */}
         <section id="features" className="reference-features-section">
           <div className="reference-features-row">
-            {features.map((feat, index) => {
+            {displayFeatures.map((feat, index) => {
               const Icon = feat.icon;
               return (
                 <div key={index} className="reference-feature-col">
                   <div className="feature-icon-circle">
                     <Icon size={26} strokeWidth={1.8} />
                   </div>
-                  <h3>{lang === 'en' ? feat.titleEn : feat.title}</h3>
-                  <p>{lang === 'en' ? feat.textEn : feat.text}</p>
+                  <h3>{feat.title}</h3>
+                  <p>{feat.text}</p>
                 </div>
               );
             })}
@@ -299,12 +433,8 @@ export default function LandingPage() {
             <div className="proof-quote-block">
               <span className="proof-quote-symbol">”</span>
               <div className="proof-quote-content">
-                <p className="proof-quote-text">
-                  {lang === 'en' ? activeTestimonial.quoteEn : activeTestimonial.quote}
-                </p>
-                <span className="proof-quote-author">
-                  {lang === 'en' ? activeTestimonial.authorEn : activeTestimonial.author}
-                </span>
+                <p className="proof-quote-text">{proofQuote}</p>
+                <span className="proof-quote-author">{proofAuthor}</span>
                 <div className="proof-dots-row">
                   {testimonials.map((_, i) => (
                     <button
@@ -323,27 +453,17 @@ export default function LandingPage() {
 
             {/* Stats block */}
             <div className="proof-stats-grid">
-              <div className="proof-stat-item">
-                <strong className="stat-number">+99%</strong>
-                <span className="stat-label">{lang === 'en' ? 'Customer Satisfaction' : 'معدل رضا العملاء'}</span>
-              </div>
-              <div className="proof-stat-item">
-                <strong className="stat-number">+50,000</strong>
-                <span className="stat-label">{lang === 'en' ? 'Happy Guests' : 'ضيف سعيد'}</span>
-              </div>
-              <div className="proof-stat-item">
-                <strong className="stat-number">+10,000</strong>
-                <span className="stat-label">{lang === 'en' ? 'Completed Cleanings' : 'مهمة تنظيف مكتملة'}</span>
-              </div>
-              <div className="proof-stat-item">
-                <strong className="stat-number">+500</strong>
-                <span className="stat-label">{lang === 'en' ? 'Trusted Hosts' : 'مضيف يثق بنا'}</span>
-              </div>
+              {proofStats.map(stat => (
+                <div key={stat.id} className="proof-stat-item">
+                  <strong className="stat-number">{stat.value}</strong>
+                  <span className="stat-label">{stat.label}</span>
+                </div>
+              ))}
             </div>
           </div>
         </section>
 
-        {/* PRICING SECTION - Matches screenshot media_1791383493058.png */}
+        {/* PRICING SECTION */}
         <section id="pricing" className="reference-pricing-section">
           <div className="reference-pricing-container">
             <div className="pricing-section-header">
@@ -358,9 +478,9 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* 3 Pricing Cards */}
+            {/* Pricing Cards Grid */}
             <div className="pricing-cards-grid">
-              {pricingPlans.map(plan => (
+              {displayPlans.map(plan => (
                 <div
                   key={plan.id}
                   className={`pricing-card ${plan.isHighlighted ? 'highlighted' : ''}`}
@@ -368,42 +488,40 @@ export default function LandingPage() {
                   {plan.badge && (
                     <div className="pricing-badge-pill">
                       <Sparkles size={12} />
-                      <span>{lang === 'en' ? plan.badgeEn : plan.badge}</span>
+                      <span>{plan.badge}</span>
                     </div>
                   )}
 
                   <div className="pricing-card-top">
-                    <h3 className="plan-name">{lang === 'en' ? plan.nameEn : plan.name}</h3>
-                    <p className="plan-sub">{lang === 'en' ? plan.subtitleEn : plan.subtitle}</p>
+                    <h3 className="plan-name">{plan.name}</h3>
+                    {plan.subtitle && <p className="plan-sub">{plan.subtitle}</p>}
                   </div>
 
                   <div className="pricing-card-price">
-                    <strong>{lang === 'en' ? plan.priceEn : plan.price}</strong>
+                    <strong>{plan.price}</strong>
                   </div>
 
-                  <div className="plan-unit-limit">
-                    <span>{lang === 'en' ? plan.unitsEn : plan.units}</span>
-                  </div>
+                  {plan.units && (
+                    <div className="plan-unit-limit">
+                      <span>{plan.units}</span>
+                    </div>
+                  )}
 
                   <ul className="plan-features-list">
                     {plan.features.map((feat, fIdx) => (
                       <li key={fIdx}>
                         <i className="feature-check"><Check size={12} strokeWidth={2.5} /></i>
-                        <span>{lang === 'en' ? feat.en : feat.ar}</span>
+                        <span>{feat}</span>
                       </li>
                     ))}
                   </ul>
 
                   <div className="pricing-card-btn-wrap">
                     <Link
-                      to="/register"
+                      to={plan.isCustomPrice ? '/contact' : '/register'}
                       className="pricing-card-btn"
                     >
-                      <span>
-                        {plan.id === 'basic'
-                          ? (lang === 'en' ? 'Start Now' : 'ابدأ الآن')
-                          : (lang === 'en' ? 'Subscribe Now' : 'اشترك الآن')}
-                      </span>
+                      <span>{plan.buttonText}</span>
                       {isRTL ? <ArrowLeft size={14} /> : <ArrowRight size={14} />}
                     </Link>
                   </div>
@@ -411,36 +529,38 @@ export default function LandingPage() {
               ))}
             </div>
 
-            {/* Pagination Controls per screenshot */}
-            <div className="pricing-pagination-row">
-              <button
-                type="button"
-                className="pricing-arrow-btn"
-                onClick={() => setPricingDot(prev => (prev > 0 ? prev - 1 : 3))}
-                aria-label="Previous plans"
-              >
-                {isRTL ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-              </button>
-              <div className="pricing-dots-group">
-                {[0, 1, 2, 3].map(d => (
-                  <button
-                    key={d}
-                    type="button"
-                    className={`pricing-dot ${d === pricingDot ? 'active' : ''}`}
-                    onClick={() => setPricingDot(d)}
-                    aria-label={`Page ${d + 1}`}
-                  />
-                ))}
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="pricing-pagination-row">
+                <button
+                  type="button"
+                  className="pricing-arrow-btn"
+                  onClick={() => setPricingDot(prev => (prev > 0 ? prev - 1 : totalPages - 1))}
+                  aria-label="Previous plans"
+                >
+                  {isRTL ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                </button>
+                <div className="pricing-dots-group">
+                  {Array.from({ length: totalPages }).map((_, d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      className={`pricing-dot ${d === activeDot ? 'active' : ''}`}
+                      onClick={() => setPricingDot(d)}
+                      aria-label={`Page ${d + 1}`}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="pricing-arrow-btn"
+                  onClick={() => setPricingDot(prev => (prev < totalPages - 1 ? prev + 1 : 0))}
+                  aria-label="Next plans"
+                >
+                  {isRTL ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                </button>
               </div>
-              <button
-                type="button"
-                className="pricing-arrow-btn"
-                onClick={() => setPricingDot(prev => (prev < 3 ? prev + 1 : 0))}
-                aria-label="Next plans"
-              >
-                {isRTL ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-              </button>
-            </div>
+            )}
           </div>
         </section>
       </main>

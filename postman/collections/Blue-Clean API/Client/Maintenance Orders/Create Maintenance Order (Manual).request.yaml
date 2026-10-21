@@ -1,0 +1,32 @@
+$kind: http-request
+url: "{{base_url}}/client/maintenance-orders"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "order_source_type": "manual",
+        "unit_id": 1,
+        "issue_category": "سباكة",
+        "description": "تسريب مياه خفيف تحت حوض الحمام",
+        "allow_entry": true,
+        "block_unit_temporarily": false,
+        "require_technical_report": false,
+        "execution_date": "2026-09-12",
+        "start_time": "02:00 PM",
+        "end_time": "04:00 PM",
+        "priority": "normal",
+        "assignment_method": "auto",
+        "notify_worker": true,
+        "notify_supervisor": true,
+        "notify_guest": false,
+        "internal_notes": "الوحدة شاغرة حالياً"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 5000

@@ -1,0 +1,11 @@
+$kind: http-request
+name: Client Dashboard Overview (ملخص لوحة التحكم اليومية)
+url: "{{base_url}}/client/dashboard/overview"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 1000

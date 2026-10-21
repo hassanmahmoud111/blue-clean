@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/admin/guest-orders/1/status"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "status": "delivered",
+        "payment_status": "paid"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+order: 4000

@@ -1,0 +1,26 @@
+$kind: http-request
+description: إنشاء طلب خدمة إضافية جديد بواسطة الأدمن وتعيينه لعميل محدد
+url: "{{base_url}}/admin/extra-services"
+method: POST
+headers:
+  Accept: application/json
+  Authorization: Bearer {{admin_token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "client_id": 2,
+        "unit_id": 1,
+        "service_type": "sterilization",
+        "quantity": 2,
+        "estimated_cost": 300,
+        "execution_date": "2026-10-05",
+        "start_time": "14:00",
+        "end_time": "15:30",
+        "priority": "normal",
+        "worker_id": 1,
+        "instructions": "تعقيم كامل لجميع الغرف والأبواب",
+        "attachments": []
+    }
+order: 8000

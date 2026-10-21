@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/admin/inventory/items/1/adjust-stock"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "quantity": 10,
+        "type": "add"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 5000

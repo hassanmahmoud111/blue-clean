@@ -1,0 +1,13 @@
+$kind: http-request
+url: "{{base_url}}/client/bookings/calendar?view_mode=week&date=2026-09-10"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  view_mode: week
+  date: 2026-09-10
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 2000

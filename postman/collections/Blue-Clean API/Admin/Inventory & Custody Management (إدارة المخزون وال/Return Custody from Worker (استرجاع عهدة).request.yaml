@@ -1,0 +1,17 @@
+$kind: http-request
+url: "{{base_url}}/admin/inventory/return-from-worker"
+method: POST
+headers:
+  Authorization: Bearer {{admin_token}}
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: text
+  content: |-
+    {
+        "worker_id": 1,
+        "inventory_item_id": 1,
+        "quantity": 3,
+        "notes": "استرجاع فائض العهدة"
+    }
+order: 5000

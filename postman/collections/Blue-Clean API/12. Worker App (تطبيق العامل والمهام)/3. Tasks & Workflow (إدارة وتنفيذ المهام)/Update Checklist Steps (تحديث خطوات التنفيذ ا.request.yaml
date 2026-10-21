@@ -1,0 +1,21 @@
+$kind: http-request
+name: Update Checklist Steps (تحديث خطوات التنفيذ المكتملة)
+url: "{{base_url}}/worker/tasks/cleaning/1/checklist"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "checklist_results": {
+            "غرفة النوم والمفروشات": true,
+            "الحمام وتعقيم الأسطح": true
+        }
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 5000

@@ -1,0 +1,12 @@
+$kind: http-request
+name: Get Worker Assigned Units (قائمة الوحدات المسندة للعامل)
+description: جلب قائمة الوحدات المسندة للعامل المسجل دخوله في تطبيق الموبايل.
+url: "{{base_url}}/worker/units"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{worker_token}}"
+order: 1000

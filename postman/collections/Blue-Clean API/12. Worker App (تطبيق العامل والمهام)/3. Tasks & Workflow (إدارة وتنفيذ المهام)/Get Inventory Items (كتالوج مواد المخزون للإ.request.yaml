@@ -1,0 +1,11 @@
+$kind: http-request
+name: Get Inventory Items (كتالوج مواد المخزون للإضافة)
+url: "{{base_url}}/worker/inventory-items"
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 7000

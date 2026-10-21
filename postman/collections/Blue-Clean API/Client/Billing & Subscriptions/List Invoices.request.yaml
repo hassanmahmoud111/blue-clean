@@ -1,0 +1,26 @@
+$kind: http-request
+url: "{{base_url}}/client/billing/invoices"
+method: GET
+headers:
+  Accept: application/json
+  Authorization: Bearer {{client_token}}
+queryParams:
+  - key: status
+    value: all
+    disabled: true
+  - key: type
+    value: all
+    disabled: true
+  - key: search
+    value: ""
+    disabled: true
+  - key: from_date
+    value: ""
+    disabled: true
+  - key: to_date
+    value: ""
+    disabled: true
+  - key: per_page
+    value: "5"
+    disabled: true
+order: 2000

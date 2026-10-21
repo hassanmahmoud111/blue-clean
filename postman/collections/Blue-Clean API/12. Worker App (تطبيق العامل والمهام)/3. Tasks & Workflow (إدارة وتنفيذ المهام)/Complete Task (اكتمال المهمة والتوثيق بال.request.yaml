@@ -1,0 +1,18 @@
+$kind: http-request
+name: Complete Task (اكتمال المهمة والتوثيق بالصور)
+url: "{{base_url}}/worker/tasks/cleaning/1/complete"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "notes": "تم إنهاء كافة الأعمال بالكامل."
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 9000

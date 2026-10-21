@@ -1,0 +1,161 @@
+.public-loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 40%, #ffffff 0%, #f5fafd 55%, #eaf4fa 100%);
+  font-family: 'Tajawal', system-ui, sans-serif;
+  color: #072f55;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.public-loading-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 32px;
+  max-width: 420px;
+  width: 90%;
+  animation: loadingFadeUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.public-loading-logo-wrap {
+  position: relative;
+  margin-bottom: 22px;
+}
+
+.public-loading-logo-ring {
+  position: absolute;
+  inset: -12px;
+  border-radius: 20px;
+  border: 2px dashed rgba(8, 127, 155, 0.35);
+  animation: loadingSpinSlow 12s linear infinite;
+}
+
+.public-loading-logo {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #0a5277, #083c61);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 25px rgba(8, 60, 97, 0.25);
+  animation: loadingPulse 2s ease-in-out infinite;
+}
+
+.public-loading-brand {
+  margin-bottom: 24px;
+}
+
+.public-loading-brand h2 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 800;
+  color: #072f55;
+  letter-spacing: -0.5px;
+}
+
+.public-loading-brand p {
+  margin: 4px 0 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: #668097;
+  letter-spacing: 0.2px;
+}
+
+.public-loading-spinner-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.public-loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid rgba(8, 127, 155, 0.2);
+  border-top-color: #087f9b;
+  border-radius: 50%;
+  animation: loadingSpinner 0.8s linear infinite;
+}
+
+.public-loading-text {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #087f9b;
+  margin: 0;
+}
+
+.public-loading-subtext {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0 0 18px;
+}
+
+.public-loading-bar {
+  width: 160px;
+  height: 4px;
+  background: rgba(8, 127, 155, 0.12);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.public-loading-bar-inner {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  background: linear-gradient(90deg, #087f9b, #38bdf8);
+  border-radius: 9999px;
+  animation: loadingProgress 1.4s ease-in-out infinite;
+}
+
+@keyframes loadingSpinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loadingSpinSlow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loadingPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 10px 25px rgba(8, 60, 97, 0.25);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 14px 30px rgba(8, 127, 155, 0.35);
+  }
+}
+
+@keyframes loadingProgress {
+  0% {
+    left: -50%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes loadingFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

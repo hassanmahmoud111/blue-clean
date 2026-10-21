@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{base_url}}/admin/cleaning-orders/1"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "priority": "urgent",
+        "instructions": "تعليمات محدثة من قبل الأدمن"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 6000

@@ -1,0 +1,15 @@
+$kind: http-request
+url: "{{base_url}}/client/billing/upgrade-plan"
+method: POST
+headers:
+  Accept: application/json
+  Authorization: Bearer {{client_token}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "package_id": 2,
+        "payment_method_id": 1
+    }
+order: 9000

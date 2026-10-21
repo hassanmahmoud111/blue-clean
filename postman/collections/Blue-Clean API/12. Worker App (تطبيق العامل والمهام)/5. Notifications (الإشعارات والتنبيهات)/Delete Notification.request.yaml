@@ -1,0 +1,7 @@
+$kind: http-request
+url: "{{base_url}}/worker/notifications/1"
+method: DELETE
+headers:
+  Authorization: Bearer {{worker_token}}
+  Accept: application/json
+order: 4000

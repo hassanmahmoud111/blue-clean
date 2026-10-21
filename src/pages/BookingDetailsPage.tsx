@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import type { BookingItem } from '../types/clientBooking';
 import { deleteClientBooking, fetchBookingDetail } from '../services/clientBookingService';
+import PublicLoadingScreen from '../components/PublicLoadingScreen';
 import './reference-pages.css';
 import './details-pages.css';
 import './system-completion.css';
@@ -49,11 +50,7 @@ export default function BookingDetailsPage() {
   };
 
   if (loading) {
-    return (
-      <div className="reference-page details-page">
-        <div style={{ padding: 40, textAlign: 'center' }}>جارٍ تحميل تفاصيل الحجز...</div>
-      </div>
-    );
+    return <PublicLoadingScreen />;
   }
 
   if (!booking) {

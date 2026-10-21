@@ -21,6 +21,7 @@ import { operationDetails } from '../data/detailRecords';
 import type { OperationDetailRecord } from '../types/details';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchClientOperations } from '../services/workflowService';
+import PublicLoadingScreen from '../components/PublicLoadingScreen';
 import './operations-page.css';
 
 type OperationPageKind = OperationDetailRecord['kind'];
@@ -298,16 +299,21 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
     }
     return [];
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-    fetchClientOperations(kind).then((apiTasks) => {
-      if (active && apiTasks) {
-        if (apiTasks.length > 0 || kind !== 'service') {
-          setTasks(apiTasks);
+    fetchClientOperations(kind)
+      .then((apiTasks) => {
+        if (active && apiTasks) {
+          if (apiTasks.length > 0 || kind !== 'service') {
+            setTasks(apiTasks);
+          }
         }
-      }
-    });
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
     return () => {
       active = false;
     };
@@ -420,6 +426,10 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
           ? 'Most Maintained Units'
           : 'Most Requested Units')
       : config.popular;
+
+  if (loading) {
+    return <PublicLoadingScreen />;
+  }
 
   return (
     <div className={`operations-page-container operation-category-${kind}`}>

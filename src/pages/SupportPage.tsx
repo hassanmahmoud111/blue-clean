@@ -24,6 +24,7 @@ import {
 } from '../services/supportTicketService';
 import type { ClientSupportTicketDetail, ClientSupportTicketItem } from '../types/supportTicket';
 import { useLanguage } from '../context/LanguageContext';
+import PublicLoadingScreen from '../components/PublicLoadingScreen';
 import './support-page.css';
 
 const statusTabKeys = ['all', 'open', 'in_progress', 'waiting_client', 'closed'] as const;
@@ -37,6 +38,7 @@ export default function SupportPage() {
   const [query, setQuery] = useState('');
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const loadTickets = async () => {
     const list = await fetchClientTickets({
@@ -50,7 +52,13 @@ export default function SupportPage() {
   };
 
   useEffect(() => {
-    loadTickets();
+    let active = true;
+    loadTickets().finally(() => {
+      if (active) setLoading(false);
+    });
+    return () => {
+      active = false;
+    };
   }, [statusFilter, query]);
 
   useEffect(() => {
@@ -166,6 +174,10 @@ export default function SupportPage() {
       default: return c;
     }
   };
+
+  if (loading) {
+    return <PublicLoadingScreen />;
+  }
 
   return (
     <div className="support-page-container">

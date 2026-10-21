@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{base_url}}/client/devices"
+method: POST
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "fcm_token": "dKjh349_sample_fcm_token_xyz...",
+        "platform": "android",
+        "device_id": "device_uuid_12345"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{client_token}}"
+order: 1000

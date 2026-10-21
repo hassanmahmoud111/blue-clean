@@ -1,0 +1,24 @@
+$kind: http-request
+name: Update Preferences (تحديث المظهر والإشعارات)
+url: "{{base_url}}/client/settings/preferences"
+method: PUT
+headers:
+  Accept: application/json
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+        "theme": "dark",
+        "language": "ar",
+        "timezone": "Asia\/Riyadh",
+        "notify_email": true,
+        "notify_sms": true,
+        "notify_in_app": true,
+        "notify_marketing": false
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 3000

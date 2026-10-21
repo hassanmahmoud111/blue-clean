@@ -1,0 +1,15 @@
+$kind: http-request
+description: جلب قائمة إشعارات العميل مع عدد الإشعارات غير المقروءة.
+url: "{{base_url}}/client/notifications?unread_only=false"
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  - key: unread_only
+    value: "false"
+    description: true لجلب غير المقروء فقط
+auth:
+  type: bearer
+  credentials:
+    token: "{{token}}"
+order: 1000

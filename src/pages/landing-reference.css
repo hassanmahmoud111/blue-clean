@@ -205,63 +205,80 @@
   cursor: pointer;
 }
 
-/* HERO SECTION - Centered per screenshot media_1791383493058.png */
-.reference-hero-centered {
-  padding: 44px 24px 32px;
-  background: radial-gradient(circle at 50% 25%, #ffffff 0%, #f6fafd 55%, #edf5fa 100%);
-  text-align: center;
+/* =========================================================
+   HERO SECTION - Split 2-Column Layout Matching Screenshots
+   ========================================================= */
+.reference-hero {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at 78% 24%, #ffffff 0%, #f6fbff 34%, #edf7fe 100%);
+  display: grid;
+  grid-template-columns: 50% 50%;
+  align-items: center;
+  min-height: clamp(420px, 30vw, 470px);
+  padding: 0;
 }
 
-.reference-hero-container {
-  max-width: 860px;
-  margin: 0 auto;
+.reference-hero-copy {
+  z-index: 3;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  justify-content: center;
+  padding: 24px clamp(28px, 4.5vw, 64px);
 }
 
-.reference-eyebrow-pill {
+.reference-landing[dir="rtl"] .reference-hero-copy {
+  text-align: right;
+  align-items: flex-start;
+}
+
+.reference-landing[dir="ltr"] .reference-hero-copy {
+  text-align: left;
+  align-items: flex-start;
+}
+
+.reference-eyebrow {
   display: inline-block;
-  padding: 7px 22px;
+  width: fit-content;
+  padding: 7px 18px;
   border-radius: 9999px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
   color: #475569;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
 }
 
-.reference-hero-title {
+.reference-hero h1 {
   margin: 0 0 16px;
-  color: #0a2540;
-  font-size: clamp(34px, 4vw, 48px);
+  color: #072f55;
+  font-size: clamp(32px, 3.2vw, 46px);
   font-weight: 800;
   line-height: 1.25;
   letter-spacing: -0.6px;
 }
 
-.reference-hero-desc {
+.reference-hero-copy > p {
   margin: 0 0 28px;
-  max-width: 700px;
-  color: #475569;
-  font-size: clamp(14px, 1.2vw, 16px);
+  max-width: 580px;
+  color: #355c7a;
+  font-size: clamp(14px, 1.1vw, 16px);
   font-weight: 500;
-  line-height: 1.65;
+  line-height: 1.7;
 }
 
-.reference-hero-cta-row {
+.reference-hero-buttons {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 14px;
   margin-bottom: 26px;
 }
 
-.reference-btn-primary {
-  height: 46px;
-  padding: 0 26px;
+.reference-primary-cta {
+  height: 48px;
+  padding: 0 28px;
   border-radius: 8px;
   background: var(--ref-teal);
   color: #ffffff;
@@ -275,51 +292,29 @@
   transition: all 0.15s ease;
 }
 
-.reference-btn-primary:hover {
+.reference-primary-cta:hover {
   background: var(--ref-teal-hover);
   transform: translateY(-1px);
 }
 
-.reference-btn-video {
-  height: 46px;
-  padding: 0 22px;
-  border-radius: 8px;
-  background: #ffffff;
-  border: 1.5px solid var(--ref-teal);
-  color: var(--ref-dark);
-  font-size: 14px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.reference-btn-video:hover {
-  background: #f0fdfa;
-  transform: translateY(-1px);
-}
-
-.reference-trust-list {
+.reference-benefits {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: clamp(18px, 3vw, 36px);
+  gap: clamp(14px, 2.2vw, 28px);
   flex-wrap: wrap;
 }
 
-.trust-item {
+.reference-benefits span {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   color: #334155;
   white-space: nowrap;
 }
 
-.trust-icon {
+.reference-benefits i {
   width: 18px;
   height: 18px;
   border-radius: 50%;
@@ -328,6 +323,46 @@
   display: grid;
   place-items: center;
   box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+}
+
+.reference-hero-visual {
+  position: relative;
+  height: 100%;
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.reference-hero-visual img {
+  width: 100%;
+  max-width: 650px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 15px 30px rgba(10, 47, 85, 0.1));
+}
+
+@media (max-width: 900px) {
+  .reference-hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding: 30px 16px;
+    text-align: center;
+  }
+  .reference-hero-copy {
+    align-items: center !important;
+    text-align: center !important;
+    padding: 20px 10px;
+  }
+  .reference-hero-buttons,
+  .reference-benefits {
+    justify-content: center;
+  }
+  .reference-hero-visual {
+    min-height: 280px;
+    padding: 0;
+  }
 }
 
 /* PLATFORMS INTEGRATION CARD */

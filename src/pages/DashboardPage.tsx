@@ -22,6 +22,7 @@ import type {
   ClientDashboardOverviewData,
   ClientDashboardRecentAlert,
 } from '../types/clientDashboard';
+import PublicLoadingScreen from '../components/PublicLoadingScreen';
 import { useLanguage } from '../context/LanguageContext';
 import './dashboard-page.css';
 
@@ -72,14 +73,19 @@ function getAlertLabel(alert: ClientDashboardRecentAlert, lang: 'ar' | 'en'): st
 export default function DashboardPage() {
   const { lang, t } = useLanguage();
   const [data, setData] = useState<ClientDashboardOverviewData>(fallbackClientDashboardOverview);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-    fetchClientDashboardOverview().then(res => {
-      if (active && res) {
-        setData(res);
-      }
-    });
+    fetchClientDashboardOverview()
+      .then(res => {
+        if (active && res) {
+          setData(res);
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
     return () => {
       active = false;
     };
@@ -121,6 +127,10 @@ export default function DashboardPage() {
   };
 
   const alertColors = ['green', 'red', 'blue', 'orange'] as const;
+
+  if (loading) {
+    return <PublicLoadingScreen />;
+  }
 
   return (
     <div className="dashboard-page-container">

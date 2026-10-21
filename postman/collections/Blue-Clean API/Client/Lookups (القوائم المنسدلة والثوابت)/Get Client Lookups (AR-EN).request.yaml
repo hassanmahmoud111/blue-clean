@@ -1,0 +1,15 @@
+$kind: http-request
+name: Get Client Lookups (AR/EN)
+url: "{{base_url}}/client/lookups"
+method: GET
+headers:
+  - key: Accept
+    value: application/json
+  - key: Accept-Language
+    value: ar
+    description: ar or en
+auth:
+  type: bearer
+  credentials:
+    token: "{{client_token}}"
+order: 1000
