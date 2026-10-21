@@ -27,6 +27,12 @@ import {
 import { getUnitDetail } from '../data/detailRecords';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchClientUnitDetail, mapApiUnitToDetailRecord } from '../services/unitService';
+import {
+  getLocalizedUnitName,
+  getLocalizedPropertyName,
+  getLocalizedCity,
+  getLocalizedDistrict,
+} from '../utils/unitTranslations';
 import type { UnitDetailRecord } from '../types/details';
 import './reference-pages.css';
 import './details-pages.css';
@@ -101,13 +107,13 @@ export default function UnitDetailsPage() {
           <div className="reference-breadcrumb">
             <Link to="/app/units">{lang === 'en' ? 'Units' : 'الوحدات'}</Link>
             {isRTL ? <ChevronLeft size={13} /> : <ChevronRight size={13} />}
-            <span>{unit.name}</span>
+            <span>{getLocalizedUnitName(unit.name, unit.code, lang)}</span>
           </div>
           <div className="detail-title-row">
             {primaryPhoto ? (
               <img
                 src={primaryPhoto}
-                alt={unit.name}
+                alt={getLocalizedUnitName(unit.name, unit.code, lang)}
                 style={{
                   width: '74px',
                   height: '62px',
@@ -125,14 +131,14 @@ export default function UnitDetailsPage() {
             )}
             <div>
               <h1>
-                {unit.name}
+                {getLocalizedUnitName(unit.name, unit.code, lang)}
                 <small>{unit.code}</small>
               </h1>
               <p>
                 <Building2 size={13} />
-                {unit.property}
+                {getLocalizedPropertyName(unit.property, unit.code, lang)}
                 <i /> <MapPin size={13} />
-                {unit.city}، {unit.district}
+                {getLocalizedCity(unit.city, unit.code, lang)}، {getLocalizedDistrict(unit.district, unit.code, lang)}
               </p>
             </div>
             <span className={`reference-chip ${unit.statusTone}`}>
@@ -603,7 +609,7 @@ export default function UnitDetailsPage() {
               }}
             >
               <strong style={{ fontSize: '15px', color: '#092f51' }}>
-                {unit.name} ({unit.code})
+                {getLocalizedUnitName(unit.name, unit.code, lang)} ({unit.code})
               </strong>
               <button
                 type="button"
@@ -633,7 +639,7 @@ export default function UnitDetailsPage() {
                 <img
                   key={`${src}-${i}`}
                   src={src}
-                  alt={`${unit.name} ${i + 1}`}
+                  alt={`${getLocalizedUnitName(unit.name, unit.code, lang)} ${i + 1}`}
                   style={{
                     width: '100%',
                     height: '200px',

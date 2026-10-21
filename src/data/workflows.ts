@@ -1,4 +1,5 @@
 import type { BookingChannel, OperationKind } from '../types/workflows';
+import { getFutureDateIso } from '../utils/dateUtils';
 
 export const workflowUnits = [
   { id: 'unit-101', name: 'شقة 101', property: 'برج النخيل', channels: ['booking'] },
@@ -23,9 +24,9 @@ export const channelConnections: Array<{
 ];
 
 export const syncedReservations = [
-  { eventId: 'evt-bkg-90021', externalId: '3918427711', channel: 'booking' as const, guest: 'عبدالله الزهراني', unitId: 'unit-102', unit: 'شقة 102', property: 'برج النخيل', checkIn: '2026-09-14', checkOut: '2026-09-17', guests: 3, total: 1860, status: 'جديد', received: 'منذ دقيقتين' },
-  { eventId: 'evt-bkg-90022', externalId: '3918427734', channel: 'booking' as const, guest: 'هدى سالم', unitId: 'unit-101', unit: 'شقة 101', property: 'برج النخيل', checkIn: '2026-09-18', checkOut: '2026-09-20', guests: 2, total: 980, status: 'تعديل', received: 'منذ 8 دقائق' },
-  { eventId: 'evt-air-44218', externalId: 'HMA3K29FQ8', channel: 'airbnb' as const, guest: 'Sara Ahmed', unitId: 'unit-304', unit: 'شقة 304', property: 'برج الياسمين', checkIn: '2026-09-16', checkOut: '2026-09-19', guests: 4, total: 2240, status: 'جديد', received: 'منذ 4 دقائق' },
+  { eventId: 'evt-bkg-90021', externalId: '3918427711', channel: 'booking' as const, guest: 'عبدالله الزهراني', unitId: 'unit-102', unit: 'شقة 102', property: 'برج النخيل', checkIn: getFutureDateIso(1), checkOut: getFutureDateIso(4), guests: 3, total: 1860, status: 'جديد', received: 'منذ دقيقتين' },
+  { eventId: 'evt-bkg-90022', externalId: '3918427734', channel: 'booking' as const, guest: 'هدى سالم', unitId: 'unit-101', unit: 'شقة 101', property: 'برج النخيل', checkIn: getFutureDateIso(5), checkOut: getFutureDateIso(7), guests: 2, total: 980, status: 'تعديل', received: 'منذ 8 دقائق' },
+  { eventId: 'evt-air-44218', externalId: 'HMA3K29FQ8', channel: 'airbnb' as const, guest: 'Sara Ahmed', unitId: 'unit-304', unit: 'شقة 304', property: 'برج الياسمين', checkIn: getFutureDateIso(2), checkOut: getFutureDateIso(5), guests: 4, total: 2240, status: 'جديد', received: 'منذ 4 دقائق' },
 ];
 
 export const relatedReservations = [

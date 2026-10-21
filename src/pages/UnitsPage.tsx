@@ -27,6 +27,11 @@ import { Tooltip } from '../components/ui';
 import { useLanguage } from '../context/LanguageContext';
 import { fetchClientUnits } from '../services/unitService';
 import PublicLoadingScreen from '../components/PublicLoadingScreen';
+import {
+  getLocalizedUnitName,
+  getLocalizedPropertyName,
+  getLocalizedLocation,
+} from '../utils/unitTranslations';
 import './units-page.css';
 
 interface UnitRowData {
@@ -202,9 +207,14 @@ const statusOptions = [
   'غير نشطة',
 ];
 
+interface FilterDropdownOption {
+  value: string;
+  label: string;
+}
+
 interface FilterDropdownProps {
   value: string;
-  options: string[];
+  options: FilterDropdownOption[];
   onChange: (val: string) => void;
   isOpen: boolean;
   onToggle: () => void;
@@ -235,6 +245,8 @@ function FilterDropdown({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onClose]);
 
+  const selectedOption = options.find((opt) => opt.value === value) || options[0];
+
   return (
     <div className="custom-filter-dropdown" ref={dropdownRef}>
       <button
@@ -243,7 +255,9 @@ function FilterDropdown({
         onClick={onToggle}
         aria-expanded={isOpen}
       >
-        <span className="custom-filter-trigger-text">{value}</span>
+        <span className="custom-filter-trigger-text">
+          {selectedOption ? selectedOption.label : value}
+        </span>
         <ChevronDown size={14} className="custom-filter-chevron" />
       </button>
 
@@ -251,17 +265,17 @@ function FilterDropdown({
         <div className="custom-filter-menu" role="listbox">
           {options.map((option) => (
             <button
-              key={option}
+              key={option.value}
               type="button"
-              className={`custom-filter-item ${option === value ? 'active' : ''}`}
+              className={`custom-filter-item ${option.value === value ? 'active' : ''}`}
               onClick={() => {
-                onChange(option);
+                onChange(option.value);
                 onClose();
               }}
               role="option"
-              aria-selected={option === value}
+              aria-selected={option.value === value}
             >
-              {option}
+              {option.label}
             </button>
           ))}
         </div>
@@ -273,47 +287,43 @@ function FilterDropdown({
 export default function UnitsPage() {
   const { lang, isRTL, t } = useLanguage();
 
-  const allStatusesLabel = lang === 'en' ? 'All Statuses' : 'جميع الحالات';
-  const allTypesLabel = lang === 'en' ? 'All Types' : 'جميع الأنواع';
-  const allCitiesLabel = lang === 'en' ? 'All Cities' : 'جميع المدن';
-
-  const localizedStatusOptions = [
-    allStatusesLabel,
-    lang === 'en' ? 'Guest Ready' : 'جاهزة للضيف',
-    lang === 'en' ? 'Draft' : 'مسودة',
-    lang === 'en' ? 'Inactive' : 'غير نشطة',
+  const statusOptions: FilterDropdownOption[] = [
+    { value: 'all', label: lang === 'en' ? 'All Statuses' : 'جميع الحالات' },
+    { value: 'ready', label: lang === 'en' ? 'Guest Ready' : 'جاهزة للضيف' },
+    { value: 'draft', label: lang === 'en' ? 'Draft' : 'مسودة' },
+    { value: 'inactive', label: lang === 'en' ? 'Inactive' : 'غير نشطة' },
   ];
 
-  const localizedTypeOptions = [
-    allTypesLabel,
-    lang === 'en' ? 'Apartment' : 'شقة',
-    lang === 'en' ? 'Hotel Apartment' : 'شقة فندقية',
-    lang === 'en' ? 'Villa' : 'فيلا',
-    lang === 'en' ? 'Studio' : 'استوديو',
-    lang === 'en' ? 'Townhouse' : 'تاون هاوس',
-    lang === 'en' ? 'Chalet' : 'شاليه',
-    lang === 'en' ? 'Office' : 'مكتب',
-    lang === 'en' ? 'Other' : 'أخرى',
+  const typeOptions: FilterDropdownOption[] = [
+    { value: 'all', label: lang === 'en' ? 'All Types' : 'جميع الأنواع' },
+    { value: 'شقة', label: lang === 'en' ? 'Apartment' : 'شقة' },
+    { value: 'شقة فندقية', label: lang === 'en' ? 'Hotel Apartment' : 'شقة فندقية' },
+    { value: 'فيلا', label: lang === 'en' ? 'Villa' : 'فيلا' },
+    { value: 'استوديو', label: lang === 'en' ? 'Studio' : 'استوديو' },
+    { value: 'تاون هاوس', label: lang === 'en' ? 'Townhouse' : 'تاون هاوس' },
+    { value: 'شاليه', label: lang === 'en' ? 'Chalet' : 'شاليه' },
+    { value: 'مكتب', label: lang === 'en' ? 'Office' : 'مكتب' },
+    { value: 'أخرى', label: lang === 'en' ? 'Other' : 'أخرى' },
   ];
 
-  const localizedCityOptions = [
-    allCitiesLabel,
-    lang === 'en' ? 'Riyadh' : 'الرياض',
-    lang === 'en' ? 'Jeddah' : 'جدة',
-    lang === 'en' ? 'Dammam' : 'الدمام',
-    lang === 'en' ? 'Al Khobar' : 'الخبر',
-    lang === 'en' ? 'Makkah' : 'مكة المكرمة',
-    lang === 'en' ? 'Dubai' : 'دبي',
-    lang === 'en' ? 'Abu Dhabi' : 'أبوظبي',
+  const cityOptions: FilterDropdownOption[] = [
+    { value: 'all', label: lang === 'en' ? 'All Cities' : 'جميع المدن' },
+    { value: 'الرياض', label: lang === 'en' ? 'Riyadh' : 'الرياض' },
+    { value: 'جدة', label: lang === 'en' ? 'Jeddah' : 'جدة' },
+    { value: 'الدمام', label: lang === 'en' ? 'Dammam' : 'الدمام' },
+    { value: 'الخبر', label: lang === 'en' ? 'Al Khobar' : 'الخبر' },
+    { value: 'مكة المكرمة', label: lang === 'en' ? 'Makkah' : 'مكة المكرمة' },
+    { value: 'دبي', label: lang === 'en' ? 'Dubai' : 'دبي' },
+    { value: 'أبوظبي', label: lang === 'en' ? 'Abu Dhabi' : 'أبوظبي' },
   ];
 
   const [unitsList, setUnitsList] = useState<UnitRowData[]>(initialUnits);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
-  const [selectedStatus, setSelectedStatus] = useState<string>(allStatusesLabel);
-  const [selectedType, setSelectedType] = useState<string>(allTypesLabel);
-  const [selectedCity, setSelectedCity] = useState<string>(allCitiesLabel);
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState<string>('all');
+  const [selectedCity, setSelectedCity] = useState<string>('all');
   const [activeDropdown, setActiveDropdown] = useState<'status' | 'type' | 'city' | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -411,23 +421,27 @@ export default function UnitsPage() {
   };
 
   const filteredUnits = unitsList.filter((unit) => {
+    const locName = getLocalizedUnitName(unit.name, unit.code, lang);
+    const locProp = getLocalizedPropertyName(unit.property, unit.code, lang);
+    const locLoc = getLocalizedLocation(unit.location, unit.code, lang);
+
     const matchesSearch =
       unit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      locName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       unit.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      unit.property.toLowerCase().includes(searchTerm.toLowerCase());
+      unit.property.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      locProp.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      selectedStatus === allStatusesLabel ||
-      unit.statusLabel === selectedStatus ||
-      getUnitStatusLabel(unit.status) === selectedStatus;
+      selectedStatus === 'all' || unit.status === selectedStatus;
 
     const matchesType =
-      selectedType === allTypesLabel ||
-      unit.type === selectedType ||
-      getUnitTypeName(unit.type) === selectedType;
+      selectedType === 'all' || unit.type === selectedType;
 
     const matchesCity =
-      selectedCity === allCitiesLabel || unit.location.includes(selectedCity);
+      selectedCity === 'all' ||
+      unit.location.toLowerCase().includes(selectedCity.toLowerCase()) ||
+      locLoc.toLowerCase().includes(selectedCity.toLowerCase());
 
     return matchesSearch && matchesStatus && matchesType && matchesCity;
   });
@@ -544,7 +558,7 @@ export default function UnitsPage() {
 
           <FilterDropdown
             value={selectedStatus}
-            options={localizedStatusOptions}
+            options={statusOptions}
             onChange={(val) => setSelectedStatus(val)}
             isOpen={activeDropdown === 'status'}
             onToggle={() =>
@@ -555,7 +569,7 @@ export default function UnitsPage() {
 
           <FilterDropdown
             value={selectedType}
-            options={localizedTypeOptions}
+            options={typeOptions}
             onChange={(val) => setSelectedType(val)}
             isOpen={activeDropdown === 'type'}
             onToggle={() =>
@@ -566,7 +580,7 @@ export default function UnitsPage() {
 
           <FilterDropdown
             value={selectedCity}
-            options={localizedCityOptions}
+            options={cityOptions}
             onChange={(val) => setSelectedCity(val)}
             isOpen={activeDropdown === 'city'}
             onToggle={() =>
@@ -656,13 +670,13 @@ export default function UnitsPage() {
                             className="unit-checkbox"
                             checked={selectedIds.includes(unit.id)}
                             onChange={() => toggleSelect(unit.id)}
-                            aria-label={`Select ${unit.name}`}
+                            aria-label={`Select ${getLocalizedUnitName(unit.name, unit.code, lang)}`}
                           />
 
                           <Link
                             to={`/app/units/${unit.code}`}
                             className="unit-thumb-box"
-                            aria-label={unit.name}
+                            aria-label={getLocalizedUnitName(unit.name, unit.code, lang)}
                           >
                             {unit.thumbPlaceholder === 'building' ? (
                               <div className="unit-thumb-placeholder">
@@ -675,7 +689,7 @@ export default function UnitsPage() {
                             ) : (
                               <img
                                 src={unit.thumbSrc}
-                                alt={unit.name}
+                                alt={getLocalizedUnitName(unit.name, unit.code, lang)}
                                 className="unit-thumb-img"
                                 onError={(e) => {
                                   (e.target as HTMLElement).style.display = 'none';
@@ -689,7 +703,7 @@ export default function UnitsPage() {
                               to={`/app/units/${unit.code}`}
                               className="unit-title-link"
                             >
-                              {unit.name}
+                              {getLocalizedUnitName(unit.name, unit.code, lang)}
                             </Link>
                             <div className="unit-sub-badges">
                               <span className="unit-type-tag">{getUnitTypeName(unit.type)}</span>
@@ -702,10 +716,10 @@ export default function UnitsPage() {
                       {/* Property */}
                       <td>
                         <div className="property-cell-wrap">
-                          <span className="property-title">{unit.property}</span>
+                          <span className="property-title">{getLocalizedPropertyName(unit.property, unit.code, lang)}</span>
                           <span className="property-location">
                             <MapPin size={11} />
-                            {unit.location}
+                            {getLocalizedLocation(unit.location, unit.code, lang)}
                           </span>
                         </div>
                       </td>
@@ -872,7 +886,7 @@ export default function UnitsPage() {
                       <Link
                         to={`/app/units/${unit.code}`}
                         className="card-thumb-box"
-                        aria-label={unit.name}
+                        aria-label={getLocalizedUnitName(unit.name, unit.code, lang)}
                       >
                         {unit.thumbPlaceholder === 'building' ? (
                           <div className="card-thumb-placeholder">
@@ -885,7 +899,7 @@ export default function UnitsPage() {
                         ) : (
                           <img
                             src={unit.thumbSrc}
-                            alt={unit.name}
+                            alt={getLocalizedUnitName(unit.name, unit.code, lang)}
                             className="card-thumb-img"
                             onError={(e) => {
                               (e.target as HTMLElement).style.display = 'none';
@@ -899,12 +913,12 @@ export default function UnitsPage() {
                   {/* Body: Title, Property, Location */}
                   <div className="card-body-meta">
                     <Link to={`/app/units/${unit.code}`} className="card-unit-title">
-                      {unit.name}
+                      {getLocalizedUnitName(unit.name, unit.code, lang)}
                     </Link>
-                    <span className="card-property-name">{unit.property}</span>
+                    <span className="card-property-name">{getLocalizedPropertyName(unit.property, unit.code, lang)}</span>
                     <span className="card-location">
                       <MapPin size={11} />
-                      {unit.location}
+                      {getLocalizedLocation(unit.location, unit.code, lang)}
                     </span>
                   </div>
 

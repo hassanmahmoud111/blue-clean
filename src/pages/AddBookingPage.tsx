@@ -6,6 +6,7 @@ import {
   Check,
   CheckCircle2,
   ChevronLeft,
+  ChevronRight,
   CircleAlert,
   Clock3,
   CloudDownload,
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react';
 import { SearchableSelect } from '../components/ui';
 import { channelConnections, syncedReservations } from '../data/workflows';
+import { useLanguage } from '../context/LanguageContext';
 import {
   createClientBooking,
   fetchBookingCalendar,
@@ -25,10 +27,10 @@ import {
   updateClientBooking,
 } from '../services/clientBookingService';
 import type { CalendarUnit, CreateBookingPayload } from '../types/clientBooking';
+import { getTodayIso, getFutureDateIso, getNextDayIso } from '../utils/dateUtils';
+import { getLocalizedPropertyName, getLocalizedUnitName } from '../utils/unitTranslations';
 import './reference-pages.css';
 import './workflow-pages.css';
-
-const steps = ['مصدر الحجز', 'بيانات الحجز', 'الدفع والتشغيل', 'المراجعة'];
 
 const initialBookingPayload = (): CreateBookingPayload => ({
   unit_id: '',
@@ -38,9 +40,9 @@ const initialBookingPayload = (): CreateBookingPayload => ({
   guest_phone: '',
   guest_email: '',
   adults_count: 2,
-  check_in_date: '2026-09-10',
+  check_in_date: getTodayIso(),
   check_in_time: '03:00 PM',
-  check_out_date: '2026-09-13',
+  check_out_date: getFutureDateIso(3),
   check_out_time: '11:00 AM',
   total_amount: 1860,
   payment_status: 'غير مدفوع',
@@ -51,6 +53,14 @@ const initialBookingPayload = (): CreateBookingPayload => ({
 });
 
 export default function AddBookingPage() {
+  const { lang, isRTL } = useLanguage();
+  const isEn = lang === 'en';
+  const currencyLabel = isEn ? 'SAR' : 'ر.س';
+
+  const steps = isEn
+    ? ['Booking Source', 'Stay & Guest Details', 'Payment & Operations', 'Review']
+    : ['مصدر الحجز', 'بيانات الحجز', 'الدفع والتشغيل', 'المراجعة'];
+
   const { bookingId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -110,25 +120,41 @@ export default function AddBookingPage() {
   const unitOptions = useMemo(() => {
     return units.map(u => ({
       value: String(u.id),
-      label: `${u.name} · ${u.property_name}`,
+      label: `${getLocalizedUnitName(u.name, lang)} · ${getLocalizedPropertyName(u.property_name, lang)}`,
     }));
-  }, [units]);
+  }, [units, lang]);
 
   const sourceOptions = [
-    { value: 'حجز مباشر: هاتف، واتساب أو موقع', label: 'حجز مباشر: هاتف، واتساب أو موقع' },
+    {
+      value: 'حجز مباشر: هاتف، واتساب أو موقع',
+      label: isEn ? 'Direct Booking: Phone, WhatsApp or Website' : 'حجز مباشر: هاتف، واتساب أو موقع',
+    },
     { value: 'Booking.com', label: 'Booking.com' },
     { value: 'Airbnb', label: 'Airbnb' },
     { value: 'Gathern', label: 'Gathern' },
   ];
 
   const paymentStatusOptions = [
-    { value: 'غير مدفوع', label: 'غير مدفوع' },
-    { value: 'مدفوع جزئيًا', label: 'مدفوع جزئيًا' },
-    { value: 'مدفوع', label: 'مدفوع' },
-    { value: 'تحصيل بواسطة المنصة', label: 'تحصيل بواسطة المنصة' },
+    { value: 'غير مدفوع', label: isEn ? 'Unpaid' : 'غير مدفوع' },
+    { value: 'مدفوع جزئيًا', label: isEn ? 'Partially Paid' : 'مدفوع جزئيًا' },
+    { value: 'مدفوع', label: isEn ? 'Paid' : 'مدفوع' },
+    { value: 'تحصيل بواسطة المنصة', label: isEn ? 'Collected by Platform' : 'تحصيل بواسطة المنصة' },
   ];
 
   const selectedUnitObj = units.find(u => String(u.id) === String(form.unit_id));
+  const selectedUnitName = selectedUnitObj ? getLocalizedUnitName(selectedUnitObj.name, lang) : '';
+
+  const getLocalizedSource = (src: string) => {
+    if (src === 'حجز مباشر: هاتف، واتساب أو موقع') {
+      return isEn ? 'Direct Booking' : 'حجز مباشر';
+    }
+    return src;
+  };
+
+  const getLocalizedPaymentStatus = (status: string) => {
+    const match = paymentStatusOptions.find(opt => opt.value === status);
+    return match ? match.label : status;
+  };
 
   const update = <K extends keyof CreateBookingPayload>(key: K, value: CreateBookingPayload[K]) => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -162,10 +188,14 @@ export default function AddBookingPage() {
   };
 
   const validate = () => {
-    if (step === 2 && !form.unit_id) return 'يرجى اختيار الوحدة أولاً.';
-    if (step === 2 && !form.guest_name.trim()) return 'يرجى إدخال اسم الضيف.';
-    if (step === 2 && (!form.check_in_date || !form.check_out_date)) return 'يرجى تحديد مواعيد الوصول والمغادرة.';
-    if (step === 2 && form.check_out_date <= form.check_in_date) return 'تاريخ المغادرة يجب أن يكون بعد تاريخ الوصول.';
+    if (step === 2 && !form.unit_id) return isEn ? 'Please select a unit first.' : 'يرجى اختيار الوحدة أولاً.';
+    if (step === 2 && !form.guest_name.trim()) return isEn ? 'Please enter guest name.' : 'يرجى إدخال اسم الضيف.';
+    if (step === 2 && (!form.check_in_date || !form.check_out_date))
+      return isEn ? 'Please specify check-in and check-out dates.' : 'يرجى تحديد مواعيد الوصول والمغادرة.';
+    if (step === 2 && form.check_in_date < getTodayIso())
+      return isEn ? 'Booking date cannot be in the past.' : 'لا يمكن حجز موعد في تاريخ سابق لتاريخ اليوم.';
+    if (step === 2 && form.check_out_date <= form.check_in_date)
+      return isEn ? 'Check-out date must be after check-in date.' : 'تاريخ المغادرة يجب أن يكون بعد تاريخ الوصول.';
     return '';
   };
 
@@ -206,12 +236,16 @@ export default function AddBookingPage() {
     return (
       <WorkflowSuccess
         icon={<BedDouble size={42} />}
-        eyebrow={isEdit ? 'تم تحديث الحجز بنجاح' : 'تم إنشاء الحجز بنجاح'}
+        eyebrow={
+          isEdit
+            ? (isEn ? 'Booking updated successfully' : 'تم تحديث الحجز بنجاح')
+            : (isEn ? 'Booking created successfully' : 'تم إنشاء الحجز بنجاح')
+        }
         title={form.guest_name}
-        description={`${selectedUnitObj?.name || 'الوحدة'} · ${form.check_in_date} إلى ${form.check_out_date}`}
-        primary="عرض تفاصيل الحجز"
+        description={`${selectedUnitName || (isEn ? 'Unit' : 'الوحدة')} · ${form.check_in_date} ${isEn ? 'to' : 'إلى'} ${form.check_out_date}`}
+        primary={isEn ? 'View Booking Details' : 'عرض تفاصيل الحجز'}
         primaryTo={`/app/bookings/${createdId}`}
-        secondary="إضافة حجز آخر"
+        secondary={isEn ? 'Add Another Booking' : 'إضافة حجز آخر'}
         onSecondary={() => {
           setForm(initialBookingPayload());
           setCreatedId('');
@@ -226,18 +260,28 @@ export default function AddBookingPage() {
       <header className="reference-page-header workflow-header">
         <div className="reference-page-heading">
           <div className="reference-breadcrumb">
-            <Link to="/app/bookings">الحجوزات والتقويم</Link>
-            <ChevronLeft size={13} />
-            <span>{isEdit ? 'تعديل الحجز' : 'إضافة حجز'}</span>
+            <Link to="/app/bookings">{isEn ? 'Bookings & Calendar' : 'الحجوزات والتقويم'}</Link>
+            {isRTL ? <ChevronLeft size={13} /> : <ChevronRight size={13} />}
+            <span>
+              {isEdit
+                ? (isEn ? 'Edit Booking' : 'تعديل الحجز')
+                : (isEn ? 'Add Booking' : 'إضافة حجز')}
+            </span>
           </div>
           <h1>
             <BedDouble size={29} />
-            {isEdit ? `تعديل الحجز: ${form.guest_name || ''}` : 'إضافة حجز جديد'}
+            {isEdit
+              ? `${isEn ? 'Edit Booking: ' : 'تعديل الحجز: '}${form.guest_name || ''}`
+              : (isEn ? 'Add New Booking' : 'إضافة حجز جديد')}
           </h1>
           <p>
             {isEdit
-              ? 'تعديل بيانات الضيف ومواعيد الإقامة ومبلغ الحجز وإعدادات الأتمتة.'
-              : 'أضف حجزًا مباشرًا أو راجع حجزًا وصل من منصة متصلة.'}
+              ? (isEn
+                  ? 'Edit guest details, stay dates, booking total, and automation settings.'
+                  : 'تعديل بيانات الضيف ومواعيد الإقامة ومبلغ الحجز وإعدادات الأتمتة.')
+              : (isEn
+                  ? 'Add a direct booking or review a reservation received from a connected platform.'
+                  : 'أضف حجزًا مباشرًا أو راجع حجزًا وصل من منصة متصلة.')}
           </p>
         </div>
         <button
@@ -246,7 +290,9 @@ export default function AddBookingPage() {
           onClick={saveDraft}
         >
           {draftSaved ? <Check size={16} /> : <Save size={16} />}
-          {draftSaved ? 'تم حفظ المسودة' : 'حفظ كمسودة'}
+          {draftSaved
+            ? (isEn ? 'Draft Saved' : 'تم حفظ المسودة')
+            : (isEn ? 'Save as Draft' : 'حفظ كمسودة')}
         </button>
       </header>
 
@@ -255,28 +301,32 @@ export default function AddBookingPage() {
       <div className="workflow-layout">
         <main className="workflow-main reference-panel">
           {/* STEP 1 */}
-          {step === 1 && <BookingSourceStep mode={mode} onChoose={chooseMode} />}
+          {step === 1 && <BookingSourceStep mode={mode} onChoose={chooseMode} isEn={isEn} />}
 
           {/* STEP 2 */}
           {step === 2 && mode === 'manual' && (
             <section className="workflow-content">
               <WorkflowHeading
                 icon={<CalendarDays size={22} />}
-                title="بيانات الإقامة والضيف"
-                description="حدد الوحدة والضيف والمواعيد للتحقق من التوفر."
+                title={isEn ? 'Stay & Guest Details' : 'بيانات الإقامة والضيف'}
+                description={
+                  isEn
+                    ? 'Select unit, guest, and dates to verify availability.'
+                    : 'حدد الوحدة والضيف والمواعيد للتحقق من التوفر.'
+                }
               />
               <div className="workflow-form-grid">
-                <Field label="الوحدة" required>
+                <Field label={isEn ? 'Unit' : 'الوحدة'} required>
                   <SearchableSelect
                     options={unitOptions}
                     value={form.unit_id}
                     onChange={val => update('unit_id', val)}
-                    placeholder="اختر الوحدة..."
-                    searchPlaceholder="ابحث باسم الوحدة أو العقار..."
+                    placeholder={isEn ? 'Select unit...' : 'اختر الوحدة...'}
+                    searchPlaceholder={isEn ? 'Search by unit or property name...' : 'ابحث باسم الوحدة أو العقار...'}
                   />
                 </Field>
 
-                <Field label="مصدر الحجز">
+                <Field label={isEn ? 'Booking Source' : 'مصدر الحجز'}>
                   <SearchableSelect
                     options={sourceOptions}
                     value={form.booking_source}
@@ -284,19 +334,19 @@ export default function AddBookingPage() {
                       update('booking_source', val);
                       update('booking_type', val.includes('Booking') ? 'booking' : val.includes('Airbnb') ? 'airbnb' : 'direct');
                     }}
-                    placeholder="اختر المصدر..."
+                    placeholder={isEn ? 'Select source...' : 'اختر المصدر...'}
                   />
                 </Field>
 
-                <Field label="اسم الضيف" required>
+                <Field label={isEn ? 'Guest Name' : 'اسم الضيف'} required>
                   <input
                     value={form.guest_name}
                     onChange={e => update('guest_name', e.target.value)}
-                    placeholder="الاسم الكامل"
+                    placeholder={isEn ? 'Full name' : 'الاسم الكامل'}
                   />
                 </Field>
 
-                <Field label="رقم الجوال">
+                <Field label={isEn ? 'Mobile Number' : 'رقم الجوال'}>
                   <input
                     dir="ltr"
                     value={form.guest_phone}
@@ -305,7 +355,7 @@ export default function AddBookingPage() {
                   />
                 </Field>
 
-                <Field label="البريد الإلكتروني">
+                <Field label={isEn ? 'Email' : 'البريد الإلكتروني'}>
                   <input
                     type="email"
                     value={form.guest_email}
@@ -314,7 +364,7 @@ export default function AddBookingPage() {
                   />
                 </Field>
 
-                <Field label="عدد البالغين">
+                <Field label={isEn ? 'Adults Count' : 'عدد البالغين'}>
                   <input
                     type="number"
                     min="1"
@@ -323,15 +373,22 @@ export default function AddBookingPage() {
                   />
                 </Field>
 
-                <Field label="تاريخ الوصول" required>
+                <Field label={isEn ? 'Check-in Date' : 'تاريخ الوصول'} required>
                   <input
                     type="date"
+                    min={getTodayIso()}
                     value={form.check_in_date}
-                    onChange={e => update('check_in_date', e.target.value)}
+                    onChange={e => {
+                      const newCheckIn = e.target.value;
+                      update('check_in_date', newCheckIn);
+                      if (form.check_out_date && form.check_out_date <= newCheckIn) {
+                        update('check_out_date', getNextDayIso(newCheckIn));
+                      }
+                    }}
                   />
                 </Field>
 
-                <Field label="وقت الوصول">
+                <Field label={isEn ? 'Check-in Time' : 'وقت الوصول'}>
                   <input
                     type="text"
                     value={form.check_in_time}
@@ -340,15 +397,16 @@ export default function AddBookingPage() {
                   />
                 </Field>
 
-                <Field label="تاريخ المغادرة" required>
+                <Field label={isEn ? 'Check-out Date' : 'تاريخ المغادرة'} required>
                   <input
                     type="date"
+                    min={form.check_in_date ? getNextDayIso(form.check_in_date) : getTodayIso()}
                     value={form.check_out_date}
                     onChange={e => update('check_out_date', e.target.value)}
                   />
                 </Field>
 
-                <Field label="وقت المغادرة">
+                <Field label={isEn ? 'Check-out Time' : 'وقت المغادرة'}>
                   <input
                     type="text"
                     value={form.check_out_time}
@@ -366,6 +424,8 @@ export default function AddBookingPage() {
               selectedEvent={selectedEvent}
               onChannel={setSyncChannel}
               onSelect={importReservation}
+              isEn={isEn}
+              currencyLabel={currencyLabel}
             />
           )}
 
@@ -374,11 +434,15 @@ export default function AddBookingPage() {
             <section className="workflow-content">
               <WorkflowHeading
                 icon={<CreditCard size={22} />}
-                title="الدفع وأتمتة التشغيل"
-                description="حدد مبلغ الحجز وحالة السداد وإعدادات المزامنة والمهام."
+                title={isEn ? 'Payment & Operations Automation' : 'الدفع وأتمتة التشغيل'}
+                description={
+                  isEn
+                    ? 'Specify booking total, payment status, sync settings, and tasks.'
+                    : 'حدد مبلغ الحجز وحالة السداد وإعدادات المزامنة والمهام.'
+                }
               />
               <div className="workflow-form-grid">
-                <Field label="إجمالي الحجز">
+                <Field label={isEn ? 'Total Amount' : 'إجمالي الحجز'}>
                   <div className="money-input">
                     <input
                       type="number"
@@ -386,16 +450,16 @@ export default function AddBookingPage() {
                       value={form.total_amount}
                       onChange={e => update('total_amount', Number(e.target.value))}
                     />
-                    <span>ر.س</span>
+                    <span>{currencyLabel}</span>
                   </div>
                 </Field>
 
-                <Field label="حالة الدفع">
+                <Field label={isEn ? 'Payment Status' : 'حالة الدفع'}>
                   <SearchableSelect
                     options={paymentStatusOptions}
                     value={form.payment_status}
                     onChange={val => update('payment_status', val)}
-                    placeholder="اختر حالة الدفع..."
+                    placeholder={isEn ? 'Select payment status...' : 'اختر حالة الدفع...'}
                   />
                 </Field>
               </div>
@@ -403,33 +467,49 @@ export default function AddBookingPage() {
               <div className="automation-list">
                 <ToggleRow
                   icon={<CalendarDays size={19} />}
-                  title="حجب التواريخ في التقويم"
-                  description="يمنع تعارض الحجز المباشر مع الحجوزات الأخرى"
+                  title={isEn ? 'Block calendar dates' : 'حجب التواريخ في التقويم'}
+                  description={
+                    isEn
+                      ? 'Prevents direct bookings from conflicting with other channels'
+                      : 'يمنع تعارض الحجز المباشر مع الحجوزات الأخرى'
+                  }
                   checked={form.block_calendar_dates}
                   onChange={val => update('block_calendar_dates', val)}
                 />
                 <ToggleRow
                   icon={<MessageCircle size={19} />}
-                  title="إرسال رسالة ترحيب"
-                  description="تُجدول بعد تأكيد بيانات التواصل"
+                  title={isEn ? 'Send welcome message' : 'إرسال رسالة ترحيب'}
+                  description={
+                    isEn
+                      ? 'Scheduled automatically upon confirming guest contact info'
+                      : 'تُجدول بعد تأكيد بيانات التواصل'
+                  }
                   checked={form.send_welcome_message}
                   onChange={val => update('send_welcome_message', val)}
                 />
                 <ToggleRow
                   icon={<RefreshCw size={19} />}
-                  title="إنشاء مهمة تنظيف بعد المغادرة"
-                  description="ترتبط بالحجز وتُنشئ مهمة تنظيف مجدولة فورًا"
+                  title={isEn ? 'Create cleaning task after checkout' : 'إنشاء مهمة تنظيف بعد المغادرة'}
+                  description={
+                    isEn
+                      ? 'Links to booking and creates a scheduled cleaning task immediately'
+                      : 'ترتبط بالحجز وتُنشئ مهمة تنظيف مجدولة فورًا'
+                  }
                   checked={form.auto_clean_on_checkout}
                   onChange={val => update('auto_clean_on_checkout', val)}
                 />
               </div>
 
-              <Field label="ملاحظات الحجز" full>
+              <Field label={isEn ? 'Booking Notes' : 'ملاحظات الحجز'} full>
                 <textarea
                   rows={3}
                   value={form.notes}
                   onChange={e => update('notes', e.target.value)}
-                  placeholder="ملاحظات الدفع أو تعليمات الوصول..."
+                  placeholder={
+                    isEn
+                      ? 'Payment notes or check-in instructions...'
+                      : 'ملاحظات الدفع أو تعليمات الوصول...'
+                  }
                 />
               </Field>
             </section>
@@ -440,45 +520,60 @@ export default function AddBookingPage() {
             <section className="workflow-content">
               <WorkflowHeading
                 icon={<CheckCircle2 size={22} />}
-                title="راجع الحجز قبل الحفظ"
-                description="تأكد من صحة بيانات الضيف والإقامة قبل الاعتماد."
+                title={isEn ? 'Review Booking Before Saving' : 'راجع الحجز قبل الحفظ'}
+                description={
+                  isEn
+                    ? 'Verify guest and stay details before confirming.'
+                    : 'تأكد من صحة بيانات الضيف والإقامة قبل الاعتماد.'
+                }
               />
               <div className="booking-review-hero">
-                <span className="channel-logo channel-direct">م</span>
+                <span className="channel-logo channel-direct">
+                  {isEn ? 'D' : 'م'}
+                </span>
                 <div>
-                  <small>{form.booking_source}</small>
+                  <small>{getLocalizedSource(form.booking_source)}</small>
                   <h2>{form.guest_name}</h2>
                   <p>
-                    {selectedUnitObj?.name || 'الوحدة'} · {form.check_in_date} إلى {form.check_out_date}
+                    {selectedUnitName || (isEn ? 'Unit' : 'الوحدة')} · {form.check_in_date} {isEn ? 'to' : 'إلى'} {form.check_out_date}
                   </p>
                 </div>
-                <strong>{form.total_amount} ر.س</strong>
+                <strong>{form.total_amount} {currencyLabel}</strong>
               </div>
 
               <div className="workflow-review-grid">
                 <ReviewBlock
-                  title="الإقامة"
+                  title={isEn ? 'Stay' : 'الإقامة'}
                   rows={[
-                    ['الوحدة', selectedUnitObj?.name || '—'],
-                    ['الوصول', `${form.check_in_date} · ${form.check_in_time}`],
-                    ['المغادرة', `${form.check_out_date} · ${form.check_out_time}`],
-                    ['الضيوف', `${form.adults_count} بالغين`],
+                    [isEn ? 'Unit' : 'الوحدة', selectedUnitName || '—'],
+                    [isEn ? 'Check-in' : 'الوصول', `${form.check_in_date} · ${form.check_in_time}`],
+                    [isEn ? 'Check-out' : 'المغادرة', `${form.check_out_date} · ${form.check_out_time}`],
+                    [isEn ? 'Guests' : 'الضيوف', `${form.adults_count} ${isEn ? 'adults' : 'بالغين'}`],
                   ]}
                 />
                 <ReviewBlock
-                  title="المصدر والدفع"
+                  title={isEn ? 'Source & Payment' : 'المصدر والدفع'}
                   rows={[
-                    ['المصدر', form.booking_source],
-                    ['حالة الدفع', form.payment_status],
-                    ['الإجمالي', `${form.total_amount} ر.س`],
+                    [isEn ? 'Source' : 'المصدر', getLocalizedSource(form.booking_source)],
+                    [isEn ? 'Payment Status' : 'حالة الدفع', getLocalizedPaymentStatus(form.payment_status)],
+                    [isEn ? 'Total' : 'الإجمالي', `${form.total_amount} ${currencyLabel}`],
                   ]}
                 />
                 <ReviewBlock
-                  title="الأتمتة"
+                  title={isEn ? 'Automation' : 'الأتمتة'}
                   rows={[
-                    ['حجب التقويم', form.block_calendar_dates ? 'مفعّل' : 'متوقف'],
-                    ['رسالة ترحيب', form.send_welcome_message ? 'مفعّل' : 'متوقف'],
-                    ['مهمة تنظيف', form.auto_clean_on_checkout ? 'مفعّل' : 'متوقف'],
+                    [
+                      isEn ? 'Calendar Blocking' : 'حجب التقويم',
+                      form.block_calendar_dates ? (isEn ? 'Enabled' : 'مفعّل') : (isEn ? 'Disabled' : 'متوقف'),
+                    ],
+                    [
+                      isEn ? 'Welcome Message' : 'رسالة ترحيب',
+                      form.send_welcome_message ? (isEn ? 'Enabled' : 'مفعّل') : (isEn ? 'Disabled' : 'متوقف'),
+                    ],
+                    [
+                      isEn ? 'Cleaning Task' : 'مهمة تنظيف',
+                      form.auto_clean_on_checkout ? (isEn ? 'Enabled' : 'مفعّل') : (isEn ? 'Disabled' : 'متوقف'),
+                    ],
                   ]}
                 />
               </div>
@@ -495,10 +590,16 @@ export default function AddBookingPage() {
           <WorkflowActions
             step={step}
             saving={saving}
-            onBack={() => (step === 1 ? history.back() : setStep(prev => prev - 1))}
+            onBack={() => (step === 1 ? navigate(-1) : setStep(prev => prev - 1))}
             onNext={next}
             onSubmit={submit}
-            submitLabel={isEdit ? 'حفظ التعديلات' : 'إنشاء الحجز'}
+            submitLabel={
+              isEdit
+                ? (isEn ? 'Save Changes' : 'حفظ التعديلات')
+                : (isEn ? 'Create Booking' : 'إنشاء الحجز')
+            }
+            isEn={isEn}
+            isRTL={isRTL}
           />
         </main>
 
@@ -507,18 +608,26 @@ export default function AddBookingPage() {
             <span>
               <RefreshCw size={21} />
             </span>
-            <h2>مزامنة بدون تكرار</h2>
+            <h2>{isEn ? 'Conflict-Free Sync' : 'مزامنة بدون تكرار'}</h2>
             <p>
-              يتم التحقق من عدم وجود أي تعارض في جدول التقويم ومواعيد تسجيل الدخول والخروج.
+              {isEn
+                ? 'Verifies calendar availability and prevents double bookings or overlapping stays.'
+                : 'يتم التحقق من عدم وجود أي تعارض في جدول التقويم ومواعيد تسجيل الدخول والخروج.'}
             </p>
           </section>
 
           <section className="reference-panel workflow-summary">
-            <h2>ملخص الحجز</h2>
-            <StatusLine label="المصدر" value={form.booking_source} />
-            <StatusLine label="الوحدة" value={selectedUnitObj?.name ?? 'لم تحدد'} />
-            <StatusLine label="الضيف" value={form.guest_name || 'لم يحدد'} />
-            <StatusLine label="الإجمالي" value={`${form.total_amount} ر.س`} />
+            <h2>{isEn ? 'Booking Summary' : 'ملخص الحجز'}</h2>
+            <StatusLine label={isEn ? 'Source' : 'المصدر'} value={getLocalizedSource(form.booking_source)} />
+            <StatusLine
+              label={isEn ? 'Unit' : 'الوحدة'}
+              value={selectedUnitName || (isEn ? 'Not selected' : 'لم تحدد')}
+            />
+            <StatusLine
+              label={isEn ? 'Guest' : 'الضيف'}
+              value={form.guest_name || (isEn ? 'Not specified' : 'لم يحدد')}
+            />
+            <StatusLine label={isEn ? 'Total' : 'الإجمالي'} value={`${form.total_amount} ${currencyLabel}`} />
           </section>
         </aside>
       </div>
@@ -529,32 +638,54 @@ export default function AddBookingPage() {
 function BookingSourceStep({
   mode,
   onChoose,
+  isEn,
 }: {
   mode: 'manual' | 'sync';
   onChoose: (mode: 'manual' | 'sync') => void;
+  isEn?: boolean;
 }) {
   return (
     <section className="workflow-content">
       <WorkflowHeading
         icon={<BedDouble size={22} />}
-        title="ما مصدر الحجز؟"
-        description="المنصات المتصلة تُزامن حجوزاتها، أما الحجز الهاتفي أو المباشر فيُدخل يدويًا."
+        title={isEn ? 'What is the booking source?' : 'ما مصدر الحجز؟'}
+        description={
+          isEn
+            ? 'Connected platforms sync reservations automatically, while direct/phone bookings are entered manually.'
+            : 'المنصات المتصلة تُزامن حجوزاتها، أما الحجز الهاتفي أو المباشر فيُدخل يدويًا.'
+        }
       />
       <div className="workflow-source-grid">
         <SourceChoice
           selected={mode === 'manual'}
           icon={<UserRound size={28} />}
-          title="حجز مباشر"
-          description="للحجوزات عبر الهاتف، واتساب، الموقع أو الاستقبال."
-          items={['تحقق فوري من توفر الوحدة', 'حجب التواريخ تلقائيًا']}
+          title={isEn ? 'Direct Booking' : 'حجز مباشر'}
+          description={
+            isEn
+              ? 'For bookings via phone, WhatsApp, website, or walk-in.'
+              : 'للحجوزات عبر الهاتف، واتساب، الموقع أو الاستقبال.'
+          }
+          items={
+            isEn
+              ? ['Instant unit availability check', 'Automatic calendar date blocking']
+              : ['تحقق فوري من توفر الوحدة', 'حجب التواريخ تلقائيًا']
+          }
           onClick={() => onChoose('manual')}
         />
         <SourceChoice
           selected={mode === 'sync'}
           icon={<CloudDownload size={28} />}
-          title="منصة متصلة"
-          description="راجع حجزًا وصل من Booking.com أو Airbnb."
-          items={['لا تعيد كتابة بيانات المنصة', 'يدعم التعديلات والإلغاءات']}
+          title={isEn ? 'Connected Platform' : 'منصة متصلة'}
+          description={
+            isEn
+              ? 'Review a booking received from Booking.com or Airbnb.'
+              : 'راجع حجزًا وصل من Booking.com أو Airbnb.'
+          }
+          items={
+            isEn
+              ? ['No need to re-enter platform data', 'Supports modifications and cancellations']
+              : ['لا تعيد كتابة بيانات المنصة', 'يدعم التعديلات والإلغاءات']
+          }
           onClick={() => onChoose('sync')}
         />
       </div>
@@ -567,18 +698,26 @@ function SyncBookingStep({
   selectedEvent,
   onChannel,
   onSelect,
+  isEn,
+  currencyLabel,
 }: {
   channel: string;
   selectedEvent: string;
   onChannel: (channel: string) => void;
   onSelect: (eventId: string) => void;
+  isEn?: boolean;
+  currencyLabel?: string;
 }) {
   return (
     <section className="workflow-content">
       <WorkflowHeading
         icon={<CloudDownload size={22} />}
-        title="صندوق الحجوزات المتزامنة"
-        description="اعتمد الحجز بعد التأكد من ربط الوحدة الصحيحة."
+        title={isEn ? 'Synced Reservations Inbox' : 'صندوق الحجوزات المتزامنة'}
+        description={
+          isEn
+            ? 'Confirm the booking after verifying the linked unit.'
+            : 'اعتمد الحجز بعد التأكد من ربط الوحدة الصحيحة.'
+        }
       />
       <div className="sync-channel-tabs">
         {channelConnections
@@ -596,7 +735,11 @@ function SyncBookingStep({
                 <b>{item.name}</b>
                 <small>{item.syncMethod}</small>
               </div>
-              <i>{item.status === 'unavailable' ? 'غير متاح' : 'متصل'}</i>
+              <i>
+                {item.status === 'unavailable'
+                  ? (isEn ? 'Unavailable' : 'غير متاح')
+                  : (isEn ? 'Connected' : 'متصل')}
+              </i>
             </button>
           ))}
       </div>
@@ -619,11 +762,11 @@ function SyncBookingStep({
                   {item.unit} · {item.property}
                 </p>
                 <small>
-                  {item.checkIn} ← {item.checkOut} · {item.guests} ضيوف
+                  {item.checkIn} ← {item.checkOut} · {item.guests} {isEn ? 'guests' : 'ضيوف'}
                 </small>
               </div>
               <div>
-                <b>{item.total} ر.س</b>
+                <b>{item.total} {currencyLabel || (isEn ? 'SAR' : 'ر.س')}</b>
                 <small>{item.received}</small>
               </div>
               <i>{selectedEvent === item.eventId && <Check size={15} />}</i>
@@ -794,6 +937,8 @@ function WorkflowActions({
   onNext,
   onSubmit,
   submitLabel,
+  isEn,
+  isRTL = true,
 }: {
   step: number;
   saving: boolean;
@@ -801,17 +946,21 @@ function WorkflowActions({
   onNext: () => void;
   onSubmit: () => void;
   submitLabel: string;
+  isEn?: boolean;
+  isRTL?: boolean;
 }) {
   return (
     <footer className="workflow-actions">
       <button type="button" className="reference-secondary" onClick={onBack}>
-        {step === 1 ? 'إلغاء' : 'السابق'}
+        {step === 1 ? (isEn ? 'Cancel' : 'إلغاء') : (isEn ? 'Back' : 'السابق')}
       </button>
-      <span>الخطوة {step} من 4</span>
+      <span>
+        {isEn ? `Step ${step} of 4` : `الخطوة ${step} من 4`}
+      </span>
       {step < 4 ? (
         <button type="button" className="reference-primary" onClick={onNext}>
-          التالي
-          <ChevronLeft size={16} />
+          {isEn ? 'Next' : 'التالي'}
+          {isRTL ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
         </button>
       ) : (
         <button
@@ -821,7 +970,7 @@ function WorkflowActions({
           onClick={onSubmit}
         >
           {saving ? <LoaderCircle className="workflow-spinner" size={17} /> : <Check size={17} />}
-          {saving ? 'جارٍ الحفظ...' : submitLabel}
+          {saving ? (isEn ? 'Saving...' : 'جارٍ الحفظ...') : submitLabel}
         </button>
       )}
     </footer>

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { BedDouble, BrushCleaning, Building2, Check, CheckCircle2, ChevronLeft, CircleDollarSign, CreditCard, FilePlus2, Info, LoaderCircle, Save, UserPlus, Wrench } from 'lucide-react';
 import { createForms, type CreateField } from '../data/createForms';
+import { getTodayIso } from '../utils/dateUtils';
 import './reference-pages.css';
 import './create-page.css';
 
@@ -51,5 +52,5 @@ export default function CreateRecordPage() {
 
 function Field({ field }: { field: CreateField }) {
   const className = `create-field ${field.full ? 'full' : ''}`;
-  return <label className={className}><span>{field.label}{field.required && <em>*</em>}</span>{field.type === 'select' ? <select name={field.name} required={field.required} defaultValue=""><option value="" disabled>اختر {field.label}</option>{field.options?.map(option=><option key={option}>{option}</option>)}</select> : field.type === 'textarea' ? <textarea name={field.name} required={field.required} placeholder={field.placeholder} rows={4}/> : <input name={field.name} required={field.required} type={field.type ?? 'text'} placeholder={field.placeholder}/>}</label>;
+  return <label className={className}><span>{field.label}{field.required && <em>*</em>}</span>{field.type === 'select' ? <select name={field.name} required={field.required} defaultValue=""><option value="" disabled>اختر {field.label}</option>{field.options?.map(option=><option key={option}>{option}</option>)}</select> : field.type === 'textarea' ? <textarea name={field.name} required={field.required} placeholder={field.placeholder} rows={4}/> : <input name={field.name} required={field.required} type={field.type ?? 'text'} min={field.type === 'date' ? getTodayIso() : undefined} placeholder={field.placeholder}/>}</label>;
 }

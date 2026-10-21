@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -330,8 +330,66 @@ export default function LandingPage() {
         }))
       : fallbackPricingPlans;
 
-  const totalPages = Math.max(1, displayPlans.length);
-  const activeDot = Math.min(pricingDot, totalPages - 1);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const pricingContainerRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!pricingContainerRef.current) return;
+    const el = pricingContainerRef.current;
+    const updateWidth = () => {
+      setContainerWidth(el.clientWidth);
+    };
+    updateWidth();
+    const ro = new ResizeObserver(updateWidth);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [loading]);
+
+  const getCardsPerView = (w: number) => {
+    if (w < 680) return 1;
+    if (w < 1024) return 2;
+    return 3;
+  };
+
+  const cardsPerView = containerWidth > 0 ? getCardsPerView(containerWidth) : 3;
+  const pricingGap = containerWidth > 0 && containerWidth < 680 ? 16 : 24;
+  const cardWidth =
+    containerWidth > 0
+      ? Math.floor((containerWidth - (cardsPerView - 1) * pricingGap) / cardsPerView)
+      : 0;
+
+  const maxIndex = Math.max(0, displayPlans.length - cardsPerView);
+  const totalPages = maxIndex + 1;
+  const activeDot = Math.min(pricingDot, maxIndex);
+  const shiftPx = activeDot * (cardWidth + pricingGap);
+
+  const handleNextPlan = () => {
+    setPricingDot(prev => (prev < maxIndex ? prev + 1 : 0));
+  };
+
+  const handlePrevPlan = () => {
+    setPricingDot(prev => (prev > 0 ? prev - 1 : maxIndex));
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(deltaX) > 40) {
+      if (deltaX > 0) {
+        if (isRTL) handleNextPlan();
+        else handlePrevPlan();
+      } else {
+        if (isRTL) handlePrevPlan();
+        else handleNextPlan();
+      }
+    }
+  };
 
   if (loading) {
     return <PublicLoadingScreen />;
@@ -435,17 +493,6 @@ export default function LandingPage() {
               <div className="proof-quote-content">
                 <p className="proof-quote-text">{proofQuote}</p>
                 <span className="proof-quote-author">{proofAuthor}</span>
-                <div className="proof-dots-row">
-                  {testimonials.map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      className={`proof-dot ${i === testimonialIdx ? 'active' : ''}`}
-                      onClick={() => setTestimonialIdx(i)}
-                      aria-label={`Slide ${i + 1}`}
-                    />
-                  ))}
-                </div>
               </div>
             </div>
 
@@ -478,55 +525,79 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Pricing Cards Grid */}
-            <div className="pricing-cards-grid">
-              {displayPlans.map(plan => (
-                <div
-                  key={plan.id}
-                  className={`pricing-card ${plan.isHighlighted ? 'highlighted' : ''}`}
-                >
-                  {plan.badge && (
-                    <div className="pricing-badge-pill">
-                      <Sparkles size={12} />
-                      <span>{plan.badge}</span>
+            {/* Pricing Cards Carousel */}
+            <div
+              className="pricing-carousel-wrapper"
+              ref={pricingContainerRef}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div
+                className="pricing-cards-track"
+                style={{
+                  transform: isRTL ? `translateX(${shiftPx}px)` : `translateX(-${shiftPx}px)`,
+                  transition: 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)',
+                  gap: `${pricingGap}px`,
+                }}
+              >
+                {displayPlans.map(plan => (
+                  <div
+                    key={plan.id}
+                    className={`pricing-card ${plan.isHighlighted ? 'highlighted' : ''}`}
+                    style={
+                      cardWidth > 0
+                        ? {
+                            width: `${cardWidth}px`,
+                            flex: `0 0 ${cardWidth}px`,
+                            minWidth: `${cardWidth}px`,
+                            maxWidth: `${cardWidth}px`,
+                          }
+                        : undefined
+                    }
+                  >
+                    {plan.badge && (
+                      <div className="pricing-badge-pill">
+                        <Sparkles size={12} />
+                        <span>{plan.badge}</span>
+                      </div>
+                    )}
+
+                    <div className="pricing-card-top">
+                      <h3 className="plan-name">{plan.name}</h3>
+                      {plan.subtitle && <p className="plan-sub">{plan.subtitle}</p>}
                     </div>
-                  )}
 
-                  <div className="pricing-card-top">
-                    <h3 className="plan-name">{plan.name}</h3>
-                    {plan.subtitle && <p className="plan-sub">{plan.subtitle}</p>}
-                  </div>
-
-                  <div className="pricing-card-price">
-                    <strong>{plan.price}</strong>
-                  </div>
-
-                  {plan.units && (
-                    <div className="plan-unit-limit">
-                      <span>{plan.units}</span>
+                    <div className="pricing-card-price">
+                      <strong>{plan.price}</strong>
                     </div>
-                  )}
 
-                  <ul className="plan-features-list">
-                    {plan.features.map((feat, fIdx) => (
-                      <li key={fIdx}>
-                        <i className="feature-check"><Check size={12} strokeWidth={2.5} /></i>
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
+                    {plan.units && (
+                      <div className="plan-unit-limit">
+                        <span>{plan.units}</span>
+                      </div>
+                    )}
 
-                  <div className="pricing-card-btn-wrap">
-                    <Link
-                      to={plan.isCustomPrice ? '/contact' : '/register'}
-                      className="pricing-card-btn"
-                    >
-                      <span>{plan.buttonText}</span>
-                      {isRTL ? <ArrowLeft size={14} /> : <ArrowRight size={14} />}
-                    </Link>
+                    <ul className="plan-features-list">
+                      {plan.features.map((feat, fIdx) => (
+                        <li key={fIdx}>
+                          <i className="feature-check"><Check size={12} strokeWidth={2.5} /></i>
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="pricing-card-btn-wrap">
+                      <Link
+                        to={plan.isCustomPrice ? '/contact' : '/register'}
+                        className="pricing-card-btn"
+                      >
+                        <span>{plan.buttonText}</span>
+                        {isRTL ? <ArrowLeft size={14} /> : <ArrowRight size={14} />}
+                      </Link>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             {/* Pagination Controls */}
@@ -535,7 +606,7 @@ export default function LandingPage() {
                 <button
                   type="button"
                   className="pricing-arrow-btn"
-                  onClick={() => setPricingDot(prev => (prev > 0 ? prev - 1 : totalPages - 1))}
+                  onClick={handlePrevPlan}
                   aria-label="Previous plans"
                 >
                   {isRTL ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
@@ -554,7 +625,7 @@ export default function LandingPage() {
                 <button
                   type="button"
                   className="pricing-arrow-btn"
-                  onClick={() => setPricingDot(prev => (prev < totalPages - 1 ? prev + 1 : 0))}
+                  onClick={handleNextPlan}
                   aria-label="Next plans"
                 >
                   {isRTL ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
