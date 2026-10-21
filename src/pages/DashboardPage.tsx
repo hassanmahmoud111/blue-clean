@@ -24,6 +24,7 @@ import type {
 } from '../types/clientDashboard';
 import PublicLoadingScreen from '../components/PublicLoadingScreen';
 import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedPropertyName, getLocalizedUnitName } from '../utils/unitTranslations';
 import './dashboard-page.css';
 
 function formatTimeFromIso(iso: string | null | undefined, lang: 'ar' | 'en'): string {
@@ -249,9 +250,12 @@ export default function DashboardPage() {
                   style={{ textDecoration: 'none', color: 'inherit' }}
                 >
                   <div className="alert-item-info">
-                    <span className="alert-item-subject">{unit.unit_name || ''}</span>
+                    <span className="alert-item-subject">
+                      {getLocalizedUnitName(unit.unit_name || '', undefined, lang)}
+                    </span>
                     <span className="alert-item-time">
-                      {unit.property_name || ''} {unit.status ? `• ${unit.status}` : ''}
+                      {getLocalizedPropertyName(unit.property_name || '', undefined, lang)}{' '}
+                      {unit.status ? `• ${unit.status}` : ''}
                     </span>
                   </div>
                   <div className={`alert-item-icon-box ${unit.type === 'maintenance' ? 'orange' : 'blue'}`}>

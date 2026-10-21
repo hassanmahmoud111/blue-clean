@@ -22,11 +22,14 @@ import {
 import type { BookingItem } from '../types/clientBooking';
 import { deleteClientBooking, fetchBookingDetail } from '../services/clientBookingService';
 import PublicLoadingScreen from '../components/PublicLoadingScreen';
+import { useLanguage } from '../context/LanguageContext';
+import { getLocalizedCity, getLocalizedPropertyName, getLocalizedUnitName } from '../utils/unitTranslations';
 import './reference-pages.css';
 import './details-pages.css';
 import './system-completion.css';
 
 export default function BookingDetailsPage() {
+  const { lang, isRTL } = useLanguage();
   const { bookingId } = useParams();
   const navigate = useNavigate();
   const [booking, setBooking] = useState<BookingItem | null>(null);
@@ -143,7 +146,8 @@ export default function BookingDetailsPage() {
                 <small>{booking.booking_code}</small>
               </h1>
               <p>
-                {booking.unit.name} · {booking.unit.property_name}
+                {getLocalizedUnitName(booking.unit.name, booking.unit.code, lang)} ·{' '}
+                {getLocalizedPropertyName(booking.unit.property_name, booking.unit.code, lang)}
               </p>
             </div>
             <span className="reference-chip green">{statusLabel}</span>
@@ -220,14 +224,15 @@ export default function BookingDetailsPage() {
                   }
                 />
                 <div>
-                  <small>الوحدة</small>
-                  <b>{booking.unit.name}</b>
+                  <small>{lang === 'en' ? 'Unit' : 'الوحدة'}</small>
+                  <b>{getLocalizedUnitName(booking.unit.name, booking.unit.code, lang)}</b>
                   <p>
                     <Building2 size={13} />
-                    {booking.unit.property_name} · {booking.unit.city?.name_ar || 'الرياض'}
+                    {getLocalizedPropertyName(booking.unit.property_name, booking.unit.code, lang)} ·{' '}
+                    {getLocalizedCity(booking.unit.city?.name_ar || 'الرياض', booking.unit.code, lang)}
                   </p>
                 </div>
-                <ChevronLeft size={17} />
+                {isRTL ? <ChevronLeft size={17} /> : <ChevronLeft size={17} style={{ transform: 'rotate(180deg)' }} />}
               </Link>
               <div className="stay-dates">
                 <DateBlock

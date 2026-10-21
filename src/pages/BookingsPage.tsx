@@ -24,6 +24,7 @@ import type {
   CalendarUnit,
 } from '../types/clientBooking';
 import PublicLoadingScreen from '../components/PublicLoadingScreen';
+import { getLocalizedPropertyName, getLocalizedUnitName } from '../utils/unitTranslations';
 import './bookings-page.css';
 import './bookings-list-view.css';
 
@@ -670,10 +671,13 @@ export default function BookingsPage() {
                   {filteredUnits.map((unit) => {
                     const enMeta = UNIT_EN_NAMES[unit.code];
                     const thumbMeta = UNIT_THUMBS[unit.code];
-                    const unitName = lang === 'en' ? enMeta?.nameEn || unit.name : unit.name;
+                    const unitName =
+                      lang === 'en'
+                        ? enMeta?.nameEn || getLocalizedUnitName(unit.name, unit.code, lang)
+                        : unit.name;
                     const unitProperty =
                       lang === 'en'
-                        ? enMeta?.propertyEn || unit.property_name
+                        ? enMeta?.propertyEn || getLocalizedPropertyName(unit.property_name, unit.code, lang)
                         : unit.property_name;
                     const thumbSrc = unit.image || thumbMeta?.src || '/unit-thumbs/thumb-1.png';
 
@@ -925,10 +929,13 @@ export default function BookingsPage() {
                 const guestName = b.guest.name || '—';
                 const unitCode = b.unit.code || String(b.unit.id);
                 const enUnit = UNIT_EN_NAMES[unitCode];
-                const unitName = lang === 'en' ? enUnit?.nameEn || b.unit.name : b.unit.name;
+                const unitName =
+                  lang === 'en'
+                    ? enUnit?.nameEn || getLocalizedUnitName(b.unit.name, unitCode, lang)
+                    : b.unit.name;
                 const unitProperty =
                   lang === 'en'
-                    ? enUnit?.propertyEn || b.unit.property_name
+                    ? enUnit?.propertyEn || getLocalizedPropertyName(b.unit.property_name, unitCode, lang)
                     : b.unit.property_name;
 
                 const stayStart = formatShortDate(b.stay.check_in_date, lang);

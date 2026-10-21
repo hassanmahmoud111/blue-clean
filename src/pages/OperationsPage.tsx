@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import {
   CalendarDays,
   CheckCircle2,
@@ -15,12 +15,20 @@ import {
   Wrench,
   X,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Tooltip } from '../components/ui';
-import { operationDetails } from '../data/detailRecords';
 import type { OperationDetailRecord } from '../types/details';
 import { useLanguage } from '../context/LanguageContext';
-import { fetchClientOperations } from '../services/workflowService';
+import {
+  fetchClientOperations,
+  fetchClientOperationStats,
+  type OperationStatsData,
+} from '../services/workflowService';
+import { fetchClientUnits, type ApiClientUnit } from '../services/unitService';
+import {
+  getLocalizedPropertyName,
+  getLocalizedUnitName,
+} from '../utils/unitTranslations';
 import PublicLoadingScreen from '../components/PublicLoadingScreen';
 import './operations-page.css';
 
@@ -105,121 +113,6 @@ const pageConfig = {
   },
 } as const;
 
-// 3 Default Service Tasks matching media_1791373487600.png
-const serviceDefaultTasks: OperationDetailRecord[] = [
-  {
-    id: 'SRV-6763',
-    kind: 'service',
-    title: 'تجهيز ضيافة إضافية',
-    subtitle: 'طلب تشغيل ومتابعة تنفيذ',
-    source: 'طلب داخلي',
-    unit: 'شقة الرمال الفاخرة - برج 4 (نسخة)',
-    property: 'أبراج الرمال السكنية',
-    unitCode: 'UNT-YMFCHL',
-    imageClass: 'u1',
-    status: 'بانتظار التعيين',
-    statusTone: 'orange',
-    priority: 'عادية',
-    priorityTone: 'blue',
-    assignee: { name: 'غير معيّن', type: 'مزود خدمة معتمد', phone: '+966 50 123 4567' },
-    schedule: { date: '7 أكتوبر 2026', start: '02:42 PM', due: '13:00', duration: 'ساعتان' },
-    description: 'تجهيز باقة ضيافة وترتيب سرير إضافي',
-    checklist: [],
-    costs: [],
-    attachments: [],
-    timeline: [],
-  },
-  {
-    id: 'SRV-1523',
-    kind: 'service',
-    title: 'تعقيم',
-    subtitle: 'طلب تشغيل ومتابعة تنفيذ',
-    source: 'guest_request',
-    unit: 'شقة الرمال الفاخرة - برج 4',
-    property: 'أبراج الرمال السكنية',
-    unitCode: 'UNT-101',
-    imageClass: 'u1',
-    status: 'بانتظار التعيين',
-    statusTone: 'orange',
-    priority: 'عادية',
-    priorityTone: 'blue',
-    assignee: { name: 'غير معيّن', type: 'مزود خدمة معتمد', phone: '+966 50 123 4567' },
-    schedule: { date: '12 أكتوبر 2026', start: '12:40 AM', due: '13:00', duration: 'ساعة' },
-    description: 'تعقيم شامل قبل الوصول',
-    checklist: [],
-    costs: [],
-    attachments: [],
-    timeline: [],
-  },
-  {
-    id: 'EXT-261002-01',
-    kind: 'service',
-    title: 'غسيل كنب',
-    subtitle: 'طلب تشغيل ومتابعة تنفيذ',
-    source: 'guest_request',
-    unit: 'شقة الرمال الفاخرة - برج 4',
-    property: 'أبراج الرمال السكنية',
-    unitCode: 'UNT-101',
-    imageClass: 'u1',
-    status: 'مجدول',
-    statusTone: 'orange',
-    priority: 'متوسط',
-    priorityTone: 'yellow',
-    assignee: { name: 'محمد محمد', type: 'مزود خدمة معتمد', phone: '+966 50 987 6543' },
-    schedule: { date: '2 أكتوبر 2026', start: '16:00', due: '17:30', duration: 'ساعة ونصف' },
-    description: 'تنظيف وغسيل الكنب',
-    checklist: [],
-    costs: [],
-    attachments: [],
-    timeline: [],
-  },
-];
-
-const servicePopularUnits = [
-  {
-    unit: 'شقة الرمال الفاخرة - برج 4',
-    unitEn: 'Al Remal Luxury Apt - Tower 4',
-    property: 'أبراج الرمال السكنية',
-    propertyEn: 'Al Remal Residential Towers',
-    count: '3 طلبات',
-    countEn: '3 requests',
-    thumb: '/unit-thumbs/thumb-1.png',
-  },
-  {
-    unit: 'شقة الرمال الفاخرة - برج 4 (نسخة)',
-    unitEn: 'Al Remal Luxury Apt - Tower 4 (Copy)',
-    property: 'أبراج الرمال السكنية',
-    propertyEn: 'Al Remal Residential Towers',
-    count: '1 طلبات',
-    countEn: '1 request',
-    thumb: '/unit-thumbs/thumb-1.png',
-  },
-];
-
-const serviceRecentActivities = [
-  {
-    color: 'green',
-    text: 'تم تحديث طلب تجهيز ضيافة إضافية في شقة الرمال الفاخرة - برج 4 (نسخة)',
-    textEn: 'Updated extra hospitality setup in Al Remal Luxury Apt - Tower 4 (Copy)',
-    time: 'منذ يوم',
-    timeEn: '1 day ago',
-  },
-  {
-    color: 'orange',
-    text: 'تم تحديث طلب تعقيم في شقة الرمال الفاخرة - برج 4',
-    textEn: 'Updated sanitization in Al Remal Luxury Apt - Tower 4',
-    time: 'منذ 4 أيام',
-    timeEn: '4 days ago',
-  },
-  {
-    color: 'blue',
-    text: 'تم تحديث طلب غسيل كنب في شقة الرمال الفاخرة - برج 4',
-    textEn: 'Updated sofa washing in Al Remal Luxury Apt - Tower 4',
-    time: 'منذ 4 أيام',
-    timeEn: '4 days ago',
-  },
-];
-
 export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
   const { lang, isRTL, t } = useLanguage();
   const config = pageConfig[kind];
@@ -248,14 +141,77 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
           : 'New Service Request')
       : config.createLabel;
 
-  // View mode switcher: 'list' | 'calendar'
-  const [view, setView] = useState<'list' | 'calendar'>('list');
+  // View mode switcher: 'list' | 'calendar' synchronized with URL (?view=calendar)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const viewParam = searchParams.get('view');
+  const [view, setView] = useState<'list' | 'calendar'>(viewParam === 'calendar' ? 'calendar' : 'list');
+
+  useEffect(() => {
+    if (viewParam === 'calendar' || viewParam === 'list') {
+      setView(viewParam);
+    }
+  }, [viewParam]);
+
+  const handleViewChange = (newView: 'list' | 'calendar') => {
+    setView(newView);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (newView === 'calendar') {
+        next.set('view', 'calendar');
+      } else {
+        next.delete('view');
+      }
+      return next;
+    });
+  };
+
+  // Calendar states
+  const [calendarMode, setCalendarMode] = useState<'day' | 'week' | 'month'>('week');
+  const [calendarDate, setCalendarDate] = useState<Date>(() => new Date());
+  const [selectedCalendarUnit, setSelectedCalendarUnit] = useState<string>('all');
+  const [clientUnits, setClientUnits] = useState<ApiClientUnit[]>([]);
+
+  useEffect(() => {
+    fetchClientUnits()
+      .then((res) => {
+        if (res && res.length > 0) setClientUnits(res);
+      })
+      .catch(() => {});
+  }, []);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
-  const [dateFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
+  const todayIso = useMemo(() => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  }, []);
+
+  const formattedDateFilter = useMemo(() => {
+    if (!dateFilter) return '';
+    const parts = dateFilter.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return dateFilter;
+  }, [dateFilter]);
+
+  const handleOpenDatePicker = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('.filter-date-clear')) return;
+    if (dateInputRef.current) {
+      if ('showPicker' in HTMLInputElement.prototype) {
+        try {
+          dateInputRef.current.showPicker();
+          return;
+        } catch {}
+      }
+      dateInputRef.current.focus();
+    }
+  };
 
   // Dropdown open states
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
@@ -284,31 +240,28 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Initialize tasks based on kind:
-  // - service: 3 tasks matching media_1791373487600.png
-  // - cleaning & maintenance: 0 tasks matching media_1791371269856.png and media_1791373318009.png
-  const [tasks, setTasks] = useState<OperationDetailRecord[]>(() => {
-    if (kind === 'service') {
-      return serviceDefaultTasks;
-    }
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('demo') === '1') {
-        return operationDetails.filter((task) => task.kind === kind);
-      }
-    }
-    return [];
-  });
+  // Live tasks and stats loaded from real API
+  const [tasks, setTasks] = useState<OperationDetailRecord[]>([]);
+  const [stats, setStats] = useState<OperationStatsData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-    fetchClientOperations(kind)
-      .then((apiTasks) => {
-        if (active && apiTasks) {
-          if (apiTasks.length > 0 || kind !== 'service') {
-            setTasks(apiTasks);
-          }
+    setLoading(true);
+    Promise.all([
+      fetchClientOperations(kind),
+      fetchClientOperationStats(kind),
+    ])
+      .then(([apiTasks, apiStats]) => {
+        if (active) {
+          setTasks(apiTasks || []);
+          setStats(apiStats || null);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setTasks([]);
+          setStats(null);
         }
       })
       .finally(() => {
@@ -319,10 +272,217 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
     };
   }, [kind]);
 
+  // Dynamically compute popular units from real API tasks
+  const popularUnits = useMemo(() => {
+    const counts: Record<string, { unit: string; property: string; unitCode: string; count: number; thumb: string }> = {};
+    for (const t of tasks) {
+      if (!t.unit || t.unit === 'الوحدة') continue;
+      const key = t.unitCode || t.unit;
+      if (!counts[key]) {
+        counts[key] = {
+          unit: t.unit,
+          property: t.property,
+          unitCode: t.unitCode,
+          count: 0,
+          thumb: '/unit-thumbs/thumb-1.png',
+        };
+      }
+      counts[key].count++;
+    }
+    return Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 5);
+  }, [tasks]);
+
+  // Dynamically compute recent activities from real API tasks
+  const recentActivities = useMemo(() => {
+    return tasks.slice(0, 5).map((t) => ({
+      color: t.statusTone || 'blue',
+      text: `تم تحديث طلب ${t.title} في ${t.unit}`,
+      textEn: `Updated ${t.title} in ${getLocalizedUnitName(t.unit, t.unitCode, 'en')}`,
+      time: t.schedule.date || (lang === 'en' ? 'Recently' : 'حديثاً'),
+      timeEn: t.schedule.date || 'Recently',
+    }));
+  }, [tasks, lang]);
+
+  // Units for calendar view
+  const allAvailableUnits = useMemo(() => {
+    const map = new Map<string, { code: string; name: string; property: string; thumb: string }>();
+    for (const u of clientUnits) {
+      const code = u.code || `UNT-${u.id}`;
+      map.set(code, {
+        code,
+        name: u.name,
+        property: u.property_name || u.name,
+        thumb: u.image || '/unit-thumbs/thumb-1.png',
+      });
+    }
+    for (const t of tasks) {
+      if (t.unit && t.unit !== 'الوحدة') {
+        const code = t.unitCode || t.unit;
+        if (!map.has(code)) {
+          map.set(code, {
+            code,
+            name: t.unit,
+            property: t.property,
+            thumb: '/unit-thumbs/thumb-1.png',
+          });
+        }
+      }
+    }
+    return Array.from(map.values());
+  }, [clientUnits, tasks]);
+
+  const calendarDisplayUnits = useMemo(() => {
+    if (selectedCalendarUnit === 'all') return allAvailableUnits;
+    return allAvailableUnits.filter((u) => u.code === selectedCalendarUnit);
+  }, [allAvailableUnits, selectedCalendarUnit]);
+
+  // Calendar days header
+  const daysHeader = useMemo(() => {
+    const arWeekDays = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة'];
+    const enWeekDays = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    const today = new Date();
+    const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    if (calendarMode === 'day') {
+      const d = calendarDate;
+      const dayIdx = (d.getDay() + 1) % 7;
+      const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      return [
+        {
+          date: d.getDate(),
+          day: lang === 'en' ? enWeekDays[dayIdx] : arWeekDays[dayIdx],
+          isoDate,
+          isToday: isoDate === todayIso,
+        },
+      ];
+    }
+
+    if (calendarMode === 'month') {
+      const year = calendarDate.getFullYear();
+      const month = calendarDate.getMonth();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+      return Array.from({ length: totalDays }, (_, i) => {
+        const d = new Date(year, month, i + 1);
+        const dayIdx = (d.getDay() + 1) % 7;
+        const isoDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`;
+        return {
+          date: d.getDate(),
+          day: lang === 'en' ? enWeekDays[dayIdx] : arWeekDays[dayIdx],
+          isoDate,
+          isToday: isoDate === todayIso,
+        };
+      });
+    }
+
+    // Default 'week' (from Saturday to Friday)
+    const d = new Date(calendarDate);
+    const dayOfWeek = (d.getDay() + 1) % 7;
+    const startOfWeek = new Date(d);
+    startOfWeek.setDate(d.getDate() - dayOfWeek);
+
+    return Array.from({ length: 7 }, (_, i) => {
+      const curr = new Date(startOfWeek);
+      curr.setDate(startOfWeek.getDate() + i);
+      const isoDate = `${curr.getFullYear()}-${String(curr.getMonth() + 1).padStart(2, '0')}-${String(curr.getDate()).padStart(2, '0')}`;
+      return {
+        date: curr.getDate(),
+        day: lang === 'en' ? enWeekDays[i] : arWeekDays[i],
+        isoDate,
+        isToday: isoDate === todayIso,
+      };
+    });
+  }, [calendarMode, calendarDate, lang]);
+
+  const currentMonthTitle = useMemo(() => {
+    const monthsAr = [
+      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+    ];
+    const monthsEn = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const m = calendarDate.getMonth();
+    const y = calendarDate.getFullYear();
+    return lang === 'en' ? `${monthsEn[m]} ${y}` : `${monthsAr[m]} ${y}`;
+  }, [calendarDate, lang]);
+
+  const shiftCalendarDate = (direction: 'prev' | 'next' | 'today') => {
+    if (direction === 'today') {
+      setCalendarDate(new Date());
+      return;
+    }
+    setCalendarDate((prev) => {
+      const next = new Date(prev);
+      const sign = direction === 'next' ? 1 : -1;
+      if (calendarMode === 'day') {
+        next.setDate(next.getDate() + sign);
+      } else if (calendarMode === 'week') {
+        next.setDate(next.getDate() + sign * 7);
+      } else {
+        next.setMonth(next.getMonth() + sign);
+      }
+      return next;
+    });
+  };
+
+  // Date filter matcher
+  const matchesDateFilter = (schedDateStr: string, filterIso: string): boolean => {
+    if (!filterIso) return true;
+    if (!schedDateStr) return false;
+    const s = schedDateStr.trim();
+    if (s.includes(filterIso)) return true;
+
+    const [y, m, d] = filterIso.split('-');
+    if (!y || !m || !d) return false;
+
+    const dayNum = parseInt(d, 10);
+    const monthNum = parseInt(m, 10);
+
+    const slashDate = `${d}/${m}/${y}`;
+    const slashDateShort = `${dayNum}/${monthNum}/${y}`;
+    if (s.includes(slashDate) || s.includes(slashDateShort)) return true;
+
+    const arabicMonths = [
+      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+    ];
+    const englishMonths = [
+      'jan', 'feb', 'mar', 'apr', 'may', 'jun',
+      'jul', 'aug', 'sep', 'oct', 'nov', 'dec'
+    ];
+
+    const arMonth = arabicMonths[monthNum - 1];
+    const enMonth = englishMonths[monthNum - 1];
+
+    const tokens = s.toLowerCase().split(/[\s,./-]+/);
+    const hasDay = tokens.some((tok) => tok === String(dayNum) || tok === d);
+
+    if (arMonth && s.includes(arMonth) && hasDay) {
+      if (s.includes(y) || !tokens.some((tok) => /^\d{4}$/.test(tok))) return true;
+    }
+    if (enMonth && s.toLowerCase().includes(enMonth) && hasDay) {
+      if (s.includes(y) || !tokens.some((tok) => /^\d{4}$/.test(tok))) return true;
+    }
+
+    const parsed = Date.parse(s);
+    if (!isNaN(parsed)) {
+      const pd = new Date(parsed);
+      const pIso = `${pd.getFullYear()}-${String(pd.getMonth() + 1).padStart(2, '0')}-${String(pd.getDate()).padStart(2, '0')}`;
+      if (pIso === filterIso) return true;
+    }
+
+    return false;
+  };
+
   // Filter tasks
   const filteredTasks = tasks.filter((task) => {
     if (statusFilter !== 'all' && task.status !== statusFilter) return false;
     if (priorityFilter !== 'all' && task.priority !== priorityFilter) return false;
+    if (dateFilter) {
+      const schedDate = task.schedule?.date || '';
+      if (!matchesDateFilter(schedDate, dateFilter)) return false;
+    }
     if (
       searchQuery &&
       !task.unit.includes(searchQuery) &&
@@ -334,8 +494,15 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
     return true;
   });
 
-  const countByStatus = (status: string) =>
-    tasks.filter((task) => task.status === status).length;
+  const countByStatus = (status: string) => {
+    if (stats) {
+      if (status === 'بانتظار التعيين' && typeof stats.pending_assignment === 'number') return stats.pending_assignment;
+      if (status === 'قيد التنفيذ' && typeof stats.in_progress === 'number') return stats.in_progress;
+      if (status === 'قيد المراجعة' && typeof stats.in_review === 'number') return stats.in_review;
+      if (status === 'مكتملة' && typeof stats.completed === 'number') return stats.completed;
+    }
+    return tasks.filter((task) => task.status === status).length;
+  };
 
   const statusOptions = [
     { value: 'all', label: lang === 'en' ? 'All Statuses' : 'جميع الحالات' },
@@ -389,28 +556,29 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
       case 'تجهيز ضيافة إضافية': return 'Extra Hospitality Setup';
       case 'تعقيم': return 'Sanitization';
       case 'غسيل كنب': return 'Sofa Washing';
+      case 'تنظيف دوري': return 'Periodic Cleaning';
+      case 'تنظيف بعد المغادرة': return 'Turnover Cleaning';
+      case 'صيانة سباكة': return 'Plumbing Maintenance';
+      case 'صيانة مكيف': return 'AC Maintenance';
       default: return t;
     }
   };
 
   const translateSource = (s: string) => {
     if (lang !== 'en') return s;
-    if (s === 'طلب داخلي') return 'Internal Request';
-    if (s === 'guest_request') return 'Guest Request';
+    if (s === 'طلب داخلي' || s === 'internal_request') return 'Internal Request';
+    if (s === 'guest_request' || s === 'طلب ضيف') return 'Guest Request';
+    if (s === 'manual' || s === 'يدوي') return 'Manual';
+    if (s === 'reservation' || s === 'مرتبط بحجز') return 'Linked to Reservation';
     return s;
   };
 
-  const translateUnit = (u: string) => {
-    if (lang !== 'en') return u;
-    if (u.includes('نسخة')) return 'Al Remal Luxury Apt - Tower 4 (Copy)';
-    if (u.includes('شقة الرمال')) return 'Al Remal Luxury Apt - Tower 4';
-    return u;
+  const translateUnit = (u: string, code?: string) => {
+    return getLocalizedUnitName(u, code, lang);
   };
 
-  const translateProperty = (p: string) => {
-    if (lang !== 'en') return p;
-    if (p.includes('أبراج الرمال')) return 'Al Remal Residential Towers';
-    return p;
+  const translateProperty = (p: string, code?: string) => {
+    return getLocalizedPropertyName(p, code, lang);
   };
 
   const translateDate = (d: string) => {
@@ -432,7 +600,10 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
   }
 
   return (
-    <div className={`operations-page-container operation-category-${kind}`}>
+    <div
+      className={`operations-page-container operation-category-${kind} ${isRTL ? 'rtl' : 'ltr'}`}
+      dir={isRTL ? 'rtl' : 'ltr'}
+    >
       {/* Top Header */}
       <header className="operations-header">
         <div className="operations-header-info">
@@ -456,19 +627,19 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
           <div className="operations-view-switcher" role="group" aria-label={lang === 'en' ? 'View mode' : 'طريقة العرض'}>
             <button
               type="button"
-              className={`operations-view-btn ${view === 'list' ? 'active' : ''}`}
-              onClick={() => setView('list')}
-            >
-              <List size={16} />
-              <span>{lang === 'en' ? 'List' : 'القائمة'}</span>
-            </button>
-            <button
-              type="button"
               className={`operations-view-btn ${view === 'calendar' ? 'active' : ''}`}
-              onClick={() => setView('calendar')}
+              onClick={() => handleViewChange('calendar')}
             >
               <CalendarDays size={16} />
               <span>{lang === 'en' ? 'Calendar' : 'التقويم'}</span>
+            </button>
+            <button
+              type="button"
+              className={`operations-view-btn ${view === 'list' ? 'active' : ''}`}
+              onClick={() => handleViewChange('list')}
+            >
+              <List size={16} />
+              <span>{lang === 'en' ? 'List' : 'القائمة'}</span>
             </button>
           </div>
 
@@ -605,26 +776,26 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
             <div className="side-card-header">
               <h2>{sidePopularHeader}</h2>
               <span className="side-header-count">
-                {kind === 'service'
-                  ? (lang === 'en' ? `${servicePopularUnits.length} units` : `${servicePopularUnits.length} وحدات`)
-                  : (lang === 'en' ? '0 units' : '0 وحدات')}
+                {lang === 'en'
+                  ? `${popularUnits.length} ${popularUnits.length === 1 ? 'unit' : 'units'}`
+                  : `${popularUnits.length} وحدات`}
               </span>
             </div>
-            {kind === 'service' ? (
+            {popularUnits.length > 0 ? (
               <div className="popular-units-list">
-                {servicePopularUnits.map((u, i) => (
-                  <Link key={i} to="/app/units" className="popular-unit-row">
+                {popularUnits.map((u, i) => (
+                  <Link key={i} to={`/app/units/${u.unitCode || ''}`} className="popular-unit-row">
                     <div className="popular-unit-info">
                       <div className="popular-unit-thumb">
-                        <img src={u.thumb} alt={lang === 'en' ? u.unitEn : u.unit} />
+                        <img src={u.thumb} alt={u.unit} />
                       </div>
                       <div className="popular-unit-details">
-                        <strong>{lang === 'en' ? u.unitEn : u.unit}</strong>
-                        <small>{lang === 'en' ? u.propertyEn : u.property}</small>
+                        <strong>{getLocalizedUnitName(u.unit, u.unitCode, lang)}</strong>
+                        <small>{getLocalizedPropertyName(u.property, u.unitCode, lang)}</small>
                       </div>
                     </div>
                     <span className="popular-unit-count">
-                      {lang === 'en' ? u.countEn : u.count}
+                      {lang === 'en' ? `${u.count} ${u.count === 1 ? 'request' : 'requests'}` : `${u.count} طلبات`}
                     </span>
                   </Link>
                 ))}
@@ -641,9 +812,9 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
             <div className="side-card-header">
               <h2>{lang === 'en' ? 'Recent Activities' : 'أحدث الأنشطة'}</h2>
             </div>
-            {kind === 'service' ? (
+            {recentActivities.length > 0 ? (
               <div className="activities-list">
-                {serviceRecentActivities.map((act, i) => (
+                {recentActivities.map((act, i) => (
                   <div key={i} className="activity-item-row">
                     <span className={`activity-dot-badge ${act.color}`} />
                     <div className="activity-content">
@@ -661,8 +832,207 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
           </div>
         </aside>
 
-        {/* Left Column: Main Table Panel */}
-        <section className="operations-panel">
+        {/* Left Column: Calendar View OR Main Table Panel */}
+        {view === 'calendar' ? (
+          <section className="calendar-card">
+            {/* Calendar Toolbar */}
+            <div className="calendar-toolbar">
+              <div className="calendar-nav-controls">
+                <div className="calendar-unit-select-wrap">
+                  <ChevronDown size={14} className="calendar-unit-select-icon" />
+                  <select
+                    className="calendar-unit-select"
+                    value={selectedCalendarUnit}
+                    onChange={(e) => setSelectedCalendarUnit(e.target.value)}
+                    aria-label={lang === 'en' ? 'Filter by unit' : 'تصفية حسب الوحدة'}
+                  >
+                    <option value="all">{lang === 'en' ? 'All Units' : 'جميع الوحدات'}</option>
+                    {allAvailableUnits.map((u) => (
+                      <option key={u.code} value={u.code}>
+                        {getLocalizedUnitName(u.name, u.code, lang)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  className="calendar-today-btn"
+                  onClick={() => shiftCalendarDate('today')}
+                >
+                  {lang === 'en' ? 'Today' : 'اليوم'}
+                </button>
+
+                <div className="calendar-date-nav-pill">
+                  <button
+                    type="button"
+                    className="calendar-date-nav-btn"
+                    aria-label={lang === 'en' ? 'Previous' : 'السابق'}
+                    onClick={() => shiftCalendarDate('prev')}
+                  >
+                    {isRTL ? <ChevronRight size={15} /> : <ChevronLeft size={15} />}
+                  </button>
+
+                  <span className="calendar-month-title">{currentMonthTitle}</span>
+
+                  <button
+                    type="button"
+                    className="calendar-date-nav-btn"
+                    aria-label={lang === 'en' ? 'Next' : 'التالي'}
+                    onClick={() => shiftCalendarDate('next')}
+                  >
+                    {isRTL ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="calendar-tabs-group">
+                <button
+                  type="button"
+                  className={`calendar-tab-btn ${calendarMode === 'day' ? 'active' : ''}`}
+                  onClick={() => setCalendarMode('day')}
+                >
+                  {lang === 'en' ? 'Day' : 'اليوم'}
+                </button>
+                <button
+                  type="button"
+                  className={`calendar-tab-btn ${calendarMode === 'week' ? 'active' : ''}`}
+                  onClick={() => setCalendarMode('week')}
+                >
+                  {lang === 'en' ? 'Week' : 'الأسبوع'}
+                </button>
+                <button
+                  type="button"
+                  className={`calendar-tab-btn ${calendarMode === 'month' ? 'active' : ''}`}
+                  onClick={() => setCalendarMode('month')}
+                >
+                  {lang === 'en' ? 'Month' : 'الشهر'}
+                </button>
+              </div>
+            </div>
+
+            {/* Calendar Grid Matrix */}
+            <div className="calendar-grid-container">
+              <table className="calendar-table">
+                <thead>
+                  <tr>
+                    <th className="col-unit-header">{lang === 'en' ? 'Unit' : 'الوحدة'}</th>
+                    {daysHeader.map((d) => (
+                      <th
+                        key={d.isoDate}
+                        className={d.isToday ? 'today-col' : ''}
+                        style={{ width: 'calc((100% - 220px) / 7)' }}
+                      >
+                        <div className="cal-th-day-name">{d.day}</div>
+                        {d.isToday ? (
+                          <span className="today-num-badge">{d.date}</span>
+                        ) : (
+                          <div className="cal-th-day-num">{d.date}</div>
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {calendarDisplayUnits.length === 0 ? (
+                    <tr>
+                      <td className="calendar-empty-unit-cell">
+                        {lang === 'en' ? 'No units available' : 'لا توجد وحدات متاحة'}
+                      </td>
+                      {daysHeader.map((d) => (
+                        <td
+                          key={d.isoDate}
+                          className={`calendar-empty-day-cell ${d.isToday ? 'today-cell' : ''}`}
+                        />
+                      ))}
+                    </tr>
+                  ) : (
+                    calendarDisplayUnits.map((unit) => (
+                      <tr key={unit.code}>
+                        <td>
+                          <div className="cal-unit-cell">
+                            <div className="cal-unit-thumb">
+                              <img
+                                src={unit.thumb || '/unit-thumbs/thumb-1.png'}
+                                alt={unit.name}
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = 'none';
+                                }}
+                              />
+                            </div>
+                            <div className="cal-unit-info">
+                              <Link
+                                to={`/app/units/${unit.code}`}
+                                className="cal-unit-title"
+                              >
+                                {getLocalizedUnitName(unit.name, unit.code, lang)}
+                              </Link>
+                              <span className="cal-unit-prop">
+                                {getLocalizedPropertyName(unit.property, unit.code, lang)}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {daysHeader.map((d) => {
+                          const dayTasks = tasks.filter((t) => {
+                            const unitMatches =
+                              t.unitCode === unit.code ||
+                              t.unit === unit.name;
+                            if (!unitMatches) return false;
+                            const schedDate = t.schedule.date || '';
+                            return (
+                              schedDate.includes(d.isoDate) ||
+                              schedDate.includes(`${d.date} `) ||
+                              schedDate === String(d.date)
+                            );
+                          });
+
+                          return (
+                            <td key={d.isoDate} className={d.isToday ? 'today-cell' : ''}>
+                              {dayTasks.map((task) => (
+                                <Link
+                                  key={task.id}
+                                  to={`/app/operations/${config.route}/${task.id}`}
+                                  className={`operation-cal-pill ${task.statusTone || 'blue'}`}
+                                  title={`${task.title} - ${task.id}`}
+                                >
+                                  <span className="cal-pill-dot" />
+                                  <span className="cal-pill-title">{translateTaskTitle(task.title)}</span>
+                                </Link>
+                              ))}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Bottom Legend */}
+            <footer className="calendar-legend-bar">
+              <div className="legend-item">
+                <span className="legend-ring orange" />
+                <span>{lang === 'en' ? 'Pending Assignment' : 'بانتظار التعيين'}</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-ring blue" />
+                <span>{lang === 'en' ? 'In Progress' : 'قيد التنفيذ'}</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-ring purple" />
+                <span>{lang === 'en' ? 'In Review' : 'قيد المراجعة'}</span>
+              </div>
+              <div className="legend-item">
+                <span className="legend-ring green" />
+                <span>{lang === 'en' ? 'Completed' : 'مكتملة'}</span>
+              </div>
+            </footer>
+          </section>
+        ) : (
+          <section className="operations-panel">
           {/* Filter Toolbar */}
           <div className="operations-filter-bar">
             {/* 1. Search Box */}
@@ -768,9 +1138,53 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
             </div>
 
             {/* 4. Date Picker Input */}
-            <div className="filter-date-btn">
+            <div
+              className={`filter-date-btn ${dateFilter ? 'has-value' : ''}`}
+              onClick={handleOpenDatePicker}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleOpenDatePicker(e as unknown as React.MouseEvent);
+                }
+              }}
+              title={lang === 'en' ? 'Filter by date' : 'تصفية حسب التاريخ'}
+            >
               <CalendarDays size={16} />
-              <span>{dateFilter || (lang === 'en' ? 'dd/mm/yyyy' : 'dd/mm/yyyy')}</span>
+              <span>{formattedDateFilter || 'dd/mm/yyyy'}</span>
+              <input
+                ref={dateInputRef}
+                type="date"
+                min={todayIso}
+                value={dateFilter}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val && val < todayIso) return;
+                  setDateFilter(val);
+                  if (val) {
+                    const [y, m, d] = val.split('-').map(Number);
+                    if (y && m && d) setCalendarDate(new Date(y, m - 1, d));
+                  }
+                }}
+                className="filter-date-native-input"
+                tabIndex={-1}
+                aria-label={lang === 'en' ? 'Select date' : 'اختر التاريخ'}
+              />
+              {dateFilter && (
+                <button
+                  type="button"
+                  className="filter-date-clear"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDateFilter('');
+                  }}
+                  aria-label={lang === 'en' ? 'Clear date' : 'مسح التاريخ'}
+                  title={lang === 'en' ? 'Clear date' : 'مسح التاريخ'}
+                >
+                  <X size={12} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -796,12 +1210,18 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
                           <PageIcon size={44} color="#94a3b8" />
                         </div>
                         <strong>
-                          {lang === 'en' ? 'No requests in this section' : 'لا توجد طلبات في هذا القسم'}
+                          {searchQuery || statusFilter !== 'all' || priorityFilter !== 'all' || dateFilter
+                            ? (lang === 'en' ? 'No matching tasks found' : 'لا توجد مهام تطابق خيارات التصفية')
+                            : (lang === 'en' ? 'No requests in this section' : 'لا توجد طلبات في هذا القسم')}
                         </strong>
                         <p>
-                          {lang === 'en'
-                            ? 'You can create a new request from the button above'
-                            : `يمكنك إنشاء أول ${config.noun} من الزر أعلى الصفحة`}
+                          {searchQuery || statusFilter !== 'all' || priorityFilter !== 'all' || dateFilter
+                            ? (lang === 'en'
+                                ? 'Try clearing or adjusting search, status, priority, or date filters.'
+                                : 'جرّب تعديل أو مسح خيارات البحث أو التاريخ أو الحالة.')
+                            : (lang === 'en'
+                                ? 'You can create a new request from the button above'
+                                : `يمكنك إنشاء أول ${config.noun} من الزر أعلى الصفحة`)}
                         </p>
                       </div>
                     </td>
@@ -822,15 +1242,25 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
                             />
                           </div>
                           <div className="table-unit-info">
-                            <strong>{translateUnit(task.unit)}</strong>
-                            <small>{translateProperty(task.property)}</small>
+                            <Link
+                              to={`/app/units/${task.unitCode || ''}`}
+                              style={{ textDecoration: 'none', color: 'inherit' }}
+                            >
+                              <strong>{translateUnit(task.unit, task.unitCode)}</strong>
+                            </Link>
+                            <small>{translateProperty(task.property, task.unitCode)}</small>
                           </div>
                         </div>
                       </td>
 
                       {/* Service Type Column */}
                       <td>
-                        <strong>{translateTaskTitle(task.title)}</strong>
+                        <Link
+                          to={`/app/operations/${config.route}/${task.id}`}
+                          style={{ textDecoration: 'none', color: 'inherit' }}
+                        >
+                          <strong>{translateTaskTitle(task.title)}</strong>
+                        </Link>
                         <div style={{ fontSize: '11px', color: '#64748b' }}>
                           {task.id} · {translateSource(task.source)}
                         </div>
@@ -920,7 +1350,8 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
             </footer>
           )}
         </section>
-      </div>
+      )}
     </div>
-  );
+  </div>
+);
 }

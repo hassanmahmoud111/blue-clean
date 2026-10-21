@@ -278,11 +278,18 @@ export default function UnitDetailsPage() {
                 label={lang === 'en' ? 'Management Mode' : 'نمط الإدارة'}
                 value={translateMode(unit.managementMode)}
               />
-              <Info label={lang === 'en' ? 'Property' : 'العقار'} value={unit.property} />
+              <Info
+                label={lang === 'en' ? 'Property' : 'العقار'}
+                value={getLocalizedPropertyName(unit.property, unit.code, lang)}
+              />
               <Info label={lang === 'en' ? 'Address' : 'العنوان'} value={unit.address} />
               <Info
                 label={lang === 'en' ? 'City & District' : 'المدينة والحي'}
-                value={`${unit.city}، ${unit.district}`}
+                value={
+                  lang === 'en'
+                    ? `${getLocalizedCity(unit.city, unit.code, lang)}, ${getLocalizedDistrict(unit.district, unit.code, lang)}`
+                    : `${unit.city}، ${unit.district}`
+                }
               />
               <Info label={lang === 'en' ? 'Unit Code' : 'كود الوحدة'} value={unit.code} />
             </div>

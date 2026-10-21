@@ -100,10 +100,53 @@ const storageKey = 'bluclean-created-units';
 
 export async function fetchClientUnits(): Promise<ApiClientUnit[] | null> {
   const res = await apiFetch<ApiClientUnit[]>('/client/units');
+  let units: ApiClientUnit[] = [];
   if (res.ok && Array.isArray(res.data)) {
-    return res.data;
+    units = [...res.data];
   }
-  return null;
+
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = window.localStorage.getItem(storageKey);
+      if (raw) {
+        const localList = JSON.parse(raw);
+        if (Array.isArray(localList)) {
+          const existingCodes = new Set(units.map(u => (u.code || String(u.id)).toUpperCase()));
+          for (const lu of localList) {
+            const code = lu.identity?.code || lu.id || 'UNT-NEW';
+            if (!existingCodes.has(code.toUpperCase())) {
+              units.unshift({
+                id: lu.apiId || Date.now(),
+                code: lu.identity?.code || `UNT-${Date.now().toString().slice(-4)}`,
+                name: lu.identity?.name || 'وحدة جديدة',
+                unit_type: lu.identity?.type || 'apartment',
+                unit_type_label: lu.identity?.type === 'villa' ? 'فيلا' : 'شقة',
+                property_name: lu.identity?.propertyName || lu.identity?.name || 'عقار جديد',
+                status: 'ready',
+                status_label: 'جاهزة',
+                operational_status: 'ready',
+                operational_status_label: 'جاهزة للاستخدام',
+                image: null,
+                images: [],
+                capacity: {
+                  guests_count: Number(lu.capacity?.maxGuests) || 2,
+                  bedrooms_count: Number(lu.capacity?.bedrooms) || 1,
+                  beds_count: Number(lu.capacity?.beds) || 1,
+                  bathrooms_count: Number(lu.capacity?.bathrooms) || 1,
+                },
+                management_mode: 'independent',
+                management_mode_label: 'تشغيل مستقل',
+                check_in_time: lu.operations?.checkInTime || '15:00',
+                check_out_time: lu.operations?.checkOutTime || '11:00',
+              });
+            }
+          }
+        }
+      }
+    } catch {}
+  }
+
+  return units.length > 0 ? units : null;
 }
 
 export async function fetchClientUnitDetail(idOrCode: string): Promise<ApiClientUnit | null> {

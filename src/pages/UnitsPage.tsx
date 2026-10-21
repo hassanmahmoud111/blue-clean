@@ -41,6 +41,7 @@ interface UnitRowData {
   type: string;
   property: string;
   location: string;
+  locationEn?: string;
   status: 'draft' | 'inactive' | 'ready';
   statusLabel: string;
   capacity: {
@@ -358,6 +359,9 @@ export default function UnitsPage() {
                 : 'draft';
           const cityAr = u.city?.name_ar || 'الرياض';
           const areaAr = u.area?.name_ar || 'العليا';
+          const cityEn = u.city?.name_en || '';
+          const areaEn = u.area?.name_en || '';
+          const locationEn = cityEn && areaEn ? `${cityEn} - ${areaEn}` : (cityEn || areaEn || '');
           return {
             id: u.code || String(u.id),
             code: u.code || `UNT-${u.id}`,
@@ -365,6 +369,7 @@ export default function UnitsPage() {
             type: u.unit_type_label || 'شقة',
             property: u.property_name || 'عقار',
             location: `${cityAr} - ${areaAr}`,
+            locationEn,
             status: normalizedStatus,
             statusLabel: u.status_label || (normalizedStatus === 'ready' ? 'جاهزة للضيف' : normalizedStatus === 'inactive' ? 'غير نشطة' : 'مسودة'),
             capacity: {
@@ -423,7 +428,7 @@ export default function UnitsPage() {
   const filteredUnits = unitsList.filter((unit) => {
     const locName = getLocalizedUnitName(unit.name, unit.code, lang);
     const locProp = getLocalizedPropertyName(unit.property, unit.code, lang);
-    const locLoc = getLocalizedLocation(unit.location, unit.code, lang);
+    const locLoc = getLocalizedLocation(unit.location, unit.code, lang, unit.locationEn);
 
     const matchesSearch =
       unit.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -719,7 +724,7 @@ export default function UnitsPage() {
                           <span className="property-title">{getLocalizedPropertyName(unit.property, unit.code, lang)}</span>
                           <span className="property-location">
                             <MapPin size={11} />
-                            {getLocalizedLocation(unit.location, unit.code, lang)}
+                            {getLocalizedLocation(unit.location, unit.code, lang, unit.locationEn)}
                           </span>
                         </div>
                       </td>
@@ -918,7 +923,7 @@ export default function UnitsPage() {
                     <span className="card-property-name">{getLocalizedPropertyName(unit.property, unit.code, lang)}</span>
                     <span className="card-location">
                       <MapPin size={11} />
-                      {getLocalizedLocation(unit.location, unit.code, lang)}
+                      {getLocalizedLocation(unit.location, unit.code, lang, unit.locationEn)}
                     </span>
                   </div>
 

@@ -360,7 +360,26 @@ const fallbackCalendar: CalendarData = {
   ],
 };
 
-let localBookingsStore: BookingItem[] = [...fallbackBookings];
+function getStoredCreatedBookings(): BookingItem[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem('bluclean_created_bookings');
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveStoredCreatedBooking(booking: BookingItem) {
+  if (typeof window === 'undefined') return;
+  try {
+    const current = getStoredCreatedBookings();
+    const filtered = current.filter(b => String(b.id) !== String(booking.id) && b.booking_code !== booking.booking_code);
+    window.localStorage.setItem('bluclean_created_bookings', JSON.stringify([booking, ...filtered]));
+  } catch {}
+}
+
+let localBookingsStore: BookingItem[] = [...getStoredCreatedBookings(), ...fallbackBookings];
 
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -477,16 +496,20 @@ export async function fetchBookings(params?: {
     if (response.ok) {
       const json = await response.json();
       if (json.success && Array.isArray(json.data)) {
+        const localSaved = getStoredCreatedBookings();
+        const remoteIds = new Set(json.data.map((b: any) => String(b.id)));
+        const uniqueLocal = localSaved.filter(b => !remoteIds.has(String(b.id)));
+        const combined = [...uniqueLocal, ...json.data];
         if (!params?.search && (!params?.channel || params.channel === 'all') && (!params?.status || params.status === 'all')) {
-          localBookingsStore = json.data;
+          localBookingsStore = combined;
         }
         return {
-          data: json.data,
+          data: combined,
           meta: json.meta || {
             current_page: params?.page || 1,
             last_page: 1,
-            per_page: params?.per_page || json.data.length,
-            total: json.data.length,
+            per_page: params?.per_page || combined.length,
+            total: combined.length,
           },
           links: json.links,
         };
@@ -496,7 +519,12 @@ export async function fetchBookings(params?: {
     // fallback
   }
 
-  const filtered = localBookingsStore.filter(b => {
+  const localSaved = getStoredCreatedBookings();
+  const storeIds = new Set(localBookingsStore.map(b => String(b.id)));
+  const uniqueLocal = localSaved.filter(b => !storeIds.has(String(b.id)));
+  const allBookings = [...uniqueLocal, ...localBookingsStore];
+
+  const filtered = allBookings.filter(b => {
     if (params?.search) {
       const q = params.search.toLowerCase();
       const match = `${b.guest.name} ${b.booking_code} ${b.unit.name} ${b.unit.property_name}`.toLowerCase().includes(q);
@@ -603,6 +631,7 @@ export async function createClientBooking(payload: CreateBookingPayload): Promis
       const json = await response.json();
       if (json.success && json.data) {
         localBookingsStore.unshift(json.data);
+        saveStoredCreatedBooking(json.data);
         return json.data;
       }
     }
@@ -680,6 +709,7 @@ export async function createClientBooking(payload: CreateBookingPayload): Promis
   };
 
   localBookingsStore.unshift(newBooking);
+  saveStoredCreatedBooking(newBooking);
   return newBooking;
 }
 
