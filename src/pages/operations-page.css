@@ -159,12 +159,21 @@
   justify-content: space-between;
   align-items: center;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s, background-color 0.15s;
+  cursor: pointer;
+  user-select: none;
 }
 
 .operation-stat-card:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  border-color: #cbd5e1;
+}
+
+.operation-stat-card.active {
+  border-color: #0c7c8a;
+  background: #f0fdfa;
+  box-shadow: 0 0 0 2px rgba(12, 124, 138, 0.2), 0 4px 12px rgba(12, 124, 138, 0.08);
 }
 
 .operation-stat-info {

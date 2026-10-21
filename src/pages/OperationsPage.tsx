@@ -475,80 +475,206 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
     return false;
   };
 
+  type CanonicalStatus = 'pending' | 'scheduled' | 'in_progress' | 'in_review' | 'completed' | 'cancelled';
+  type CanonicalPriority = 'urgent' | 'high' | 'medium' | 'normal';
+
+  const getCanonicalStatusKey = (s?: string): CanonicalStatus | 'other' => {
+    if (!s) return 'other';
+    const norm = s.trim().toLowerCase();
+    if (
+      norm === 'بانتظار التعيين' ||
+      norm === 'في انتظار التعيين' ||
+      norm === 'pending_assignment' ||
+      norm === 'pending' ||
+      norm.includes('انتظار')
+    ) {
+      return 'pending';
+    }
+    if (
+      norm === 'مجدول' ||
+      norm === 'تم إسناد العامل' ||
+      norm === 'تم اسناد العامل' ||
+      norm === 'assigned' ||
+      norm === 'scheduled' ||
+      norm.includes('إسناد') ||
+      norm.includes('اسناد')
+    ) {
+      return 'scheduled';
+    }
+    if (
+      norm === 'قيد التنفيذ' ||
+      norm === 'قيد الإصلاح والتنفيذ' ||
+      norm === 'قيد الاصلاح والتنفيذ' ||
+      norm === 'in_progress' ||
+      norm.includes('تنفيذ')
+    ) {
+      return 'in_progress';
+    }
+    if (
+      norm === 'قيد المراجعة' ||
+      norm === 'in_review' ||
+      norm.includes('مراجعة')
+    ) {
+      return 'in_review';
+    }
+    if (
+      norm === 'مكتملة' ||
+      norm === 'مكتمل' ||
+      norm === 'completed' ||
+      norm.includes('مكتمل')
+    ) {
+      return 'completed';
+    }
+    if (
+      norm === 'ملغاة' ||
+      norm === 'ملغي' ||
+      norm === 'cancelled' ||
+      norm === 'canceled'
+    ) {
+      return 'cancelled';
+    }
+    return 'other';
+  };
+
+  const getCanonicalPriorityKey = (p?: string): CanonicalPriority | 'other' => {
+    if (!p) return 'other';
+    const norm = p.trim().toLowerCase();
+    if (norm === 'عاجل' || norm === 'عاجلة' || norm === 'urgent') return 'urgent';
+    if (norm === 'عال' || norm === 'عالي' || norm === 'عالية' || norm === 'high') return 'high';
+    if (norm === 'متوسط' || norm === 'متوسطة' || norm === 'medium') return 'medium';
+    if (norm === 'عادي' || norm === 'عادية' || norm === 'منخفض' || norm === 'منخفضة' || norm === 'normal' || norm === 'low') return 'normal';
+    return 'other';
+  };
+
+  const matchesStatusFilter = (taskStatus: string, filter: string): boolean => {
+    if (!filter || filter === 'all') return true;
+    const taskCanon = getCanonicalStatusKey(taskStatus);
+    const filterCanon = getCanonicalStatusKey(filter);
+    if (filterCanon !== 'other') {
+      return taskCanon === filterCanon;
+    }
+    return taskStatus.trim().toLowerCase() === filter.trim().toLowerCase();
+  };
+
+  const matchesPriorityFilter = (taskPriority: string, filter: string): boolean => {
+    if (!filter || filter === 'all') return true;
+    const taskCanon = getCanonicalPriorityKey(taskPriority);
+    const filterCanon = getCanonicalPriorityKey(filter);
+    if (filterCanon !== 'other') {
+      return taskCanon === filterCanon;
+    }
+    return taskPriority.trim().toLowerCase() === filter.trim().toLowerCase();
+  };
+
   // Filter tasks
   const filteredTasks = tasks.filter((task) => {
-    if (statusFilter !== 'all' && task.status !== statusFilter) return false;
-    if (priorityFilter !== 'all' && task.priority !== priorityFilter) return false;
+    if (!matchesStatusFilter(task.status, statusFilter)) return false;
+    if (!matchesPriorityFilter(task.priority, priorityFilter)) return false;
     if (dateFilter) {
       const schedDate = task.schedule?.date || '';
       if (!matchesDateFilter(schedDate, dateFilter)) return false;
     }
-    if (
-      searchQuery &&
-      !task.unit.includes(searchQuery) &&
-      !task.title.includes(searchQuery) &&
-      !task.id.includes(searchQuery)
-    ) {
-      return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      const unit = (task.unit || '').toLowerCase();
+      const unitCode = (task.unitCode || '').toLowerCase();
+      const prop = (task.property || '').toLowerCase();
+      const title = (task.title || '').toLowerCase();
+      const id = (task.id || '').toLowerCase();
+      const assignee = (task.assignee?.name || '').toLowerCase();
+      if (
+        !unit.includes(q) &&
+        !unitCode.includes(q) &&
+        !prop.includes(q) &&
+        !title.includes(q) &&
+        !id.includes(q) &&
+        !assignee.includes(q)
+      ) {
+        return false;
+      }
     }
     return true;
   });
 
   const countByStatus = (status: string) => {
+    const key = getCanonicalStatusKey(status);
     if (stats) {
-      if (status === 'بانتظار التعيين' && typeof stats.pending_assignment === 'number') return stats.pending_assignment;
-      if (status === 'قيد التنفيذ' && typeof stats.in_progress === 'number') return stats.in_progress;
-      if (status === 'قيد المراجعة' && typeof stats.in_review === 'number') return stats.in_review;
-      if (status === 'مكتملة' && typeof stats.completed === 'number') return stats.completed;
+      if (key === 'pending' && typeof stats.pending_assignment === 'number') return stats.pending_assignment;
+      if (key === 'in_progress' && typeof stats.in_progress === 'number') return stats.in_progress;
+      if (key === 'in_review' && typeof stats.in_review === 'number') return stats.in_review;
+      if (key === 'completed' && typeof stats.completed === 'number') return stats.completed;
     }
-    return tasks.filter((task) => task.status === status).length;
+    return tasks.filter((task) => getCanonicalStatusKey(task.status) === key).length;
   };
 
   const statusOptions = [
     { value: 'all', label: lang === 'en' ? 'All Statuses' : 'جميع الحالات' },
-    { value: 'بانتظار التعيين', label: lang === 'en' ? 'Pending Assignment' : 'بانتظار التعيين' },
-    { value: 'مجدول', label: lang === 'en' ? 'Scheduled' : 'مجدول' },
-    { value: 'قيد التنفيذ', label: lang === 'en' ? 'In Progress' : 'قيد التنفيذ' },
-    { value: 'قيد المراجعة', label: lang === 'en' ? 'In Review' : 'قيد المراجعة' },
-    { value: 'مكتملة', label: lang === 'en' ? 'Completed' : 'مكتملة' },
+    { value: 'pending', label: lang === 'en' ? 'Pending Assignment' : 'في انتظار التعيين' },
+    { value: 'scheduled', label: lang === 'en' ? 'Worker Assigned' : 'تم إسناد العامل' },
+    { value: 'in_progress', label: lang === 'en' ? 'In Progress' : 'قيد التنفيذ' },
+    { value: 'in_review', label: lang === 'en' ? 'In Review' : 'قيد المراجعة' },
+    { value: 'completed', label: lang === 'en' ? 'Completed' : 'مكتملة' },
   ];
 
   const priorityOptions = [
     { value: 'all', label: lang === 'en' ? 'All Priorities' : 'كل الأولويات' },
-    { value: 'عاجلة', label: lang === 'en' ? 'Urgent' : 'عاجلة' },
-    { value: 'عالية', label: lang === 'en' ? 'High' : 'عالية' },
-    { value: 'متوسطة', label: lang === 'en' ? 'Medium' : 'متوسطة' },
-    { value: 'عادية', label: lang === 'en' ? 'Normal' : 'عادية' },
+    { value: 'urgent', label: lang === 'en' ? 'Urgent' : 'عاجلة' },
+    { value: 'high', label: lang === 'en' ? 'High' : 'عالية' },
+    { value: 'medium', label: lang === 'en' ? 'Medium' : 'متوسطة' },
+    { value: 'normal', label: lang === 'en' ? 'Normal' : 'عادية' },
   ];
 
-  const currentStatusLabel =
-    statusOptions.find((opt) => opt.value === statusFilter)?.label || (lang === 'en' ? 'All Statuses' : 'جميع الحالات');
-  const currentPriorityLabel =
-    priorityOptions.find((opt) => opt.value === priorityFilter)?.label || (lang === 'en' ? 'All Priorities' : 'كل الأولويات');
-
   const translateStatus = (s: string) => {
-    if (lang !== 'en') return s;
-    switch (s) {
-      case 'بانتظار التعيين': return 'Pending Assignment';
-      case 'مجدول': return 'Scheduled';
-      case 'قيد التنفيذ': return 'In Progress';
-      case 'قيد المراجعة': return 'In Review';
-      case 'مكتملة': return 'Completed';
+    const canon = getCanonicalStatusKey(s);
+    if (lang === 'en') {
+      switch (canon) {
+        case 'pending': return 'Pending Assignment';
+        case 'scheduled': return 'Worker Assigned';
+        case 'in_progress': return 'In Progress';
+        case 'in_review': return 'In Review';
+        case 'completed': return 'Completed';
+        case 'cancelled': return 'Cancelled';
+        default: return s;
+      }
+    }
+    switch (canon) {
+      case 'pending': return 'في انتظار التعيين';
+      case 'scheduled': return 'تم إسناد العامل';
+      case 'in_progress': return 'قيد التنفيذ';
+      case 'in_review': return 'قيد المراجعة';
+      case 'completed': return 'مكتملة';
+      case 'cancelled': return 'ملغاة';
       default: return s;
     }
   };
 
   const translatePriority = (p: string) => {
-    if (lang !== 'en') return p;
-    switch (p) {
-      case 'عاجلة': return 'Urgent';
-      case 'عالية': return 'High';
-      case 'متوسط':
-      case 'متوسطة': return 'Medium';
-      case 'عادية': return 'Normal';
+    const canon = getCanonicalPriorityKey(p);
+    if (lang === 'en') {
+      switch (canon) {
+        case 'urgent': return 'Urgent';
+        case 'high': return 'High';
+        case 'medium': return 'Medium';
+        case 'normal': return 'Normal';
+        default: return p;
+      }
+    }
+    switch (canon) {
+      case 'urgent': return 'عاجلة';
+      case 'high': return 'عالية';
+      case 'medium': return 'متوسطة';
+      case 'normal': return 'عادية';
       default: return p;
     }
   };
+
+  const currentStatusLabel =
+    statusOptions.find((opt) => opt.value === statusFilter)?.label ||
+    (statusFilter !== 'all' ? translateStatus(statusFilter) : (lang === 'en' ? 'All Statuses' : 'جميع الحالات'));
+
+  const currentPriorityLabel =
+    priorityOptions.find((opt) => opt.value === priorityFilter)?.label ||
+    (priorityFilter !== 'all' ? translatePriority(priorityFilter) : (lang === 'en' ? 'All Priorities' : 'كل الأولويات'));
 
   const translateTaskTitle = (t: string) => {
     if (lang !== 'en') return t;
@@ -653,11 +779,23 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
       {/* 5 KPI Stat Cards */}
       <section className="operations-stats-grid">
         {/* 1. Pending Assignment */}
-        <div className="operation-stat-card">
+        <div
+          className={`operation-stat-card ${statusFilter === 'pending' ? 'active' : ''}`}
+          onClick={() => setStatusFilter((prev) => (prev === 'pending' ? 'all' : 'pending'))}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setStatusFilter((prev) => (prev === 'pending' ? 'all' : 'pending'));
+            }
+          }}
+          title={lang === 'en' ? 'Filter by Pending Assignment' : 'تصفية حسب في انتظار التعيين'}
+        >
           <div className="operation-stat-info">
-            <strong className="operation-stat-value">{countByStatus('بانتظار التعيين')}</strong>
+            <strong className="operation-stat-value">{countByStatus('pending')}</strong>
             <span className="operation-stat-label">
-              {lang === 'en' ? 'Pending Assignment' : 'بانتظار التعيين'}
+              {lang === 'en' ? 'Pending Assignment' : 'في انتظار التعيين'}
             </span>
           </div>
           <div className="operation-stat-icon-wrap">
@@ -666,9 +804,21 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
         </div>
 
         {/* 2. In Progress */}
-        <div className="operation-stat-card">
+        <div
+          className={`operation-stat-card ${statusFilter === 'in_progress' ? 'active' : ''}`}
+          onClick={() => setStatusFilter((prev) => (prev === 'in_progress' ? 'all' : 'in_progress'))}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setStatusFilter((prev) => (prev === 'in_progress' ? 'all' : 'in_progress'));
+            }
+          }}
+          title={lang === 'en' ? 'Filter by In Progress' : 'تصفية حسب قيد التنفيذ'}
+        >
           <div className="operation-stat-info">
-            <strong className="operation-stat-value">{countByStatus('قيد التنفيذ')}</strong>
+            <strong className="operation-stat-value">{countByStatus('in_progress')}</strong>
             <span className="operation-stat-label">
               {lang === 'en' ? 'In Progress' : 'قيد التنفيذ'}
             </span>
@@ -679,9 +829,21 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
         </div>
 
         {/* 3. In Review */}
-        <div className="operation-stat-card">
+        <div
+          className={`operation-stat-card ${statusFilter === 'in_review' ? 'active' : ''}`}
+          onClick={() => setStatusFilter((prev) => (prev === 'in_review' ? 'all' : 'in_review'))}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setStatusFilter((prev) => (prev === 'in_review' ? 'all' : 'in_review'));
+            }
+          }}
+          title={lang === 'en' ? 'Filter by In Review' : 'تصفية حسب قيد المراجعة'}
+        >
           <div className="operation-stat-info">
-            <strong className="operation-stat-value">{countByStatus('قيد المراجعة')}</strong>
+            <strong className="operation-stat-value">{countByStatus('in_review')}</strong>
             <span className="operation-stat-label">
               {lang === 'en' ? 'In Review' : 'قيد المراجعة'}
             </span>
@@ -692,9 +854,21 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
         </div>
 
         {/* 4. Completed */}
-        <div className="operation-stat-card">
+        <div
+          className={`operation-stat-card ${statusFilter === 'completed' ? 'active' : ''}`}
+          onClick={() => setStatusFilter((prev) => (prev === 'completed' ? 'all' : 'completed'))}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setStatusFilter((prev) => (prev === 'completed' ? 'all' : 'completed'));
+            }
+          }}
+          title={lang === 'en' ? 'Filter by Completed' : 'تصفية حسب مكتملة'}
+        >
           <div className="operation-stat-info">
-            <strong className="operation-stat-value">{countByStatus('مكتملة')}</strong>
+            <strong className="operation-stat-value">{countByStatus('completed')}</strong>
             <span className="operation-stat-label">
               {lang === 'en' ? 'Completed' : 'مكتملة'}
             </span>
@@ -705,7 +879,19 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
         </div>
 
         {/* 5. Total Requests */}
-        <div className="operation-stat-card">
+        <div
+          className={`operation-stat-card ${statusFilter === 'all' ? 'active' : ''}`}
+          onClick={() => setStatusFilter('all')}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setStatusFilter('all');
+            }
+          }}
+          title={lang === 'en' ? 'Show all requests' : 'عرض كل الطلبات'}
+        >
           <div className="operation-stat-info">
             <strong className="operation-stat-value">{tasks.length}</strong>
             <span className="operation-stat-label">
@@ -975,7 +1161,7 @@ export default function OperationsPage({ kind }: { kind: OperationPageKind }) {
                         </td>
 
                         {daysHeader.map((d) => {
-                          const dayTasks = tasks.filter((t) => {
+                          const dayTasks = filteredTasks.filter((t) => {
                             const unitMatches =
                               t.unitCode === unit.code ||
                               t.unit === unit.name;
